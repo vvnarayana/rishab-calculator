@@ -19,7 +19,7 @@ jobs:
           name: Install Python and pip
           command: |
             apt-get update
-            apt-get install -y python3-pip  # Install pip for Python 3
+            sudo apt-get install -y python3-pip  # Install pip for Python 3
 
       # Install your project dependencies
       - run:

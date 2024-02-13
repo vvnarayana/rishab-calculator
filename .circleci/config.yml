@@ -3,32 +3,24 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: python:3.9.9
+      - image: circleci/python:3.9.9
 
     steps:
       - checkout
-
-      # Install Chromedriver
-      - run:
-          name: Install Chromedriver
-          command: |
-            CHROMEDRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE)
-            curl -sS -o chromedriver.zip https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
-            unzip chromedriver.zip
-            chmod +x chromedriver
-            mv chromedriver /usr/local/bin/
 
       # Install dependencies
       - run:
           name: Install dependencies
           command: |
             pip install --upgrade pip
-            pip install selenium Flask click itsdangerous Jinja2 MarkupSafe Werkzeug pytest
+            pip install selenium==4.16.0 Flask==3.0.0 click==7.1.2 itsdangerous==1.1.0 Jinja2==3.0.2 MarkupSafe==2.0.1 Werkzeug==2.0.3 pytest
 
       # Run Selenium tests
       - run:
           name: Run Selenium tests
           command: |
+            # Specify the path to Chromedriver
+            export CHROME_DRIVER_PATH=/usr/local/bin/chromedriver
             python tests/selenium_driver_code.py
 
 workflows:

@@ -8,6 +8,16 @@ jobs:
     steps:
       - checkout
 
+      # Install Chromedriver
+      - run:
+          name: Install Chromedriver
+          command: |
+            CHROMEDRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE)
+            curl -sS -o chromedriver.zip https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
+            unzip chromedriver.zip
+            chmod +x chromedriver
+            mv chromedriver /usr/local/bin/
+
       # Install dependencies
       - run:
           name: Install dependencies

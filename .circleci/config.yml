@@ -14,7 +14,7 @@ jobs:
           name: Install project dependencies
           command: |
             pip install --upgrade pip  # Upgrade pip (optional)
-            pip install pytest Flask click itsdangerous Jinja2 MarkupSafe
+            pip install pytest Flask click itsdangerous Jinja2 MarkupSafe Werkzeug3
 
       # Run your Selenium tests
       - run:

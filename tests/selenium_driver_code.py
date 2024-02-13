@@ -10,7 +10,7 @@ import math
 # Start the browser session
 driver = webdriver.Remote(
     command_executor='http://localhost:4444/wd/hub',
-    desired_capabilities={'browserName': 'chrome'}
+    options=webdriver.ChromeOptions()
 )
 
 # Open the Flask app URL

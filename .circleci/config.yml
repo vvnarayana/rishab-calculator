@@ -8,19 +8,27 @@ jobs:
     steps:
       - checkout
 
-      # Install dependencies
+      # Install Chrome and ChromeDriver
       - run:
-          name: Install dependencies
+          name: Install Chrome and ChromeDriver
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y chromium-browser
+            sudo apt-get install -y chromium-chromedriver
+            sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
+
+      # Install Python dependencies
+      - run:
+          name: Install Python dependencies
           command: |
             pip install --upgrade pip
-            pip install selenium Flask click itsdangerous Jinja2 MarkupSafe Werkzeug pytest
+            pip install selenium
 
       # Run Selenium tests
       - run:
           name: Run Selenium tests
           command: |
-            # Specify the path to Chromedriver
-            export CHROME_DRIVER_PATH=/usr/local/bin/chromedriver
+            export CHROME_DRIVER_PATH=/usr/bin/chromedriver
             python tests/selenium_driver_code.py
 
 workflows:

@@ -3,30 +3,18 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: selenium/standalone-chrome:latest  # Latest Chrome and ChromeDriver
+      - image: python:3.9.9  # Python Docker image with Python 3.9.9
+      - image: selenium/standalone-chrome:latest  # Chrome Docker image with Selenium
 
     steps:
       - checkout
 
-      # Fix permission issue with apt lists directory
-      - run:
-          name: Fix permission issue
-          command: |
-            sudo chmod -R 755 /var/lib/apt/lists
-
-      # Install Python and pip
-      - run:
-          name: Install Python and pip
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y python3-pip  # Install pip for Python 3
-
-      # Install your project dependencies
+      # Install project dependencies
       - run:
           name: Install project dependencies
           command: |
-            pip3 install --upgrade pip  # Upgrade pip (optional)
-            pip3 install pytest selenium==4.16.0 Flask click itsdangerous Jinja2 MarkupSafe Werkzeug3
+            pip install --upgrade pip  # Upgrade pip (optional)
+            pip install pytest Flask click itsdangerous Jinja2 MarkupSafe Werkzeug3
 
       # Run your Selenium tests
       - run:

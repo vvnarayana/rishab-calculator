@@ -1,5 +1,4 @@
-from selenium.webdriver import Chrome
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver import Chrome  # Import the webdriver class directly
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -7,17 +6,9 @@ from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException
 import traceback
 import math
-import os
-
-# Set the path to Chromedriver
-CHROME_DRIVER_PATH = os.getenv('CHROME_DRIVER_PATH', '/usr/local/bin/chromedriver')
-
-# Set Chromedriver options
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('--headless')  # Run Chrome in headless mode
 
 # Start the browser session
-driver = Chrome(service=Service(CHROME_DRIVER_PATH), options=chrome_options)
+driver = Chrome()  
 
 # Open the Flask app URL
 app_url = 'http://127.0.0.1:5000'

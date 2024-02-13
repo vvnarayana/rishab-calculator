@@ -8,12 +8,19 @@ jobs:
     steps:
       - checkout
 
+      # Install Python and pip
+      - run:
+          name: Install Python and pip
+          command: |
+            apt-get update
+            apt-get install -y python3-pip  # Install pip for Python 3
+
       # Install your project dependencies
       - run:
           name: Install project dependencies
           command: |
-            pip install --upgrade pip  # Upgrade pip (optional)
-            pip install pytest selenium==4.16.0 Flask click itsdangerous Jinja2 MarkupSafe Werkzeug3
+            pip3 install --upgrade pip  # Upgrade pip (optional)
+            pip3 install pytest selenium==4.16.0 Flask click itsdangerous Jinja2 MarkupSafe Werkzeug3
 
       # Run your Selenium tests
       - run:

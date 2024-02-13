@@ -1,4 +1,4 @@
-from selenium.webdriver import Chrome  # Import the webdriver class directly
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -8,7 +8,10 @@ import traceback
 import math
 
 # Start the browser session
-driver = Chrome()  
+driver = webdriver.Remote(
+    command_executor='http://localhost:4444/wd/hub',
+    desired_capabilities={'browserName': 'chrome'}
+)
 
 # Open the Flask app URL
 app_url = 'http://127.0.0.1:5000'

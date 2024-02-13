@@ -1,29 +1,29 @@
 version: 2.1
 
 jobs:
- build:
-  docker:
-   - image: python:3.9.9 # Python Docker image with Python 3.9.9
-   - image: selenium/standalone-chrome:latest # Chrome Docker image with Selenium
+  build:
+    docker:
+      - image: python:3.9.9 # Python Docker image with Python 3.9.9
+      - image: selenium/standalone-chrome:latest # Chrome Docker image with Selenium
 
-  steps:
-   - checkout
+    steps:
+      - checkout
 
-   # Install project dependencies
-   - run:
-     name: Install project dependencies
-     command: |
-      pip install --upgrade pip # Upgrade pip (optional)
-      pip install pytest Flask click itsdangerous Jinja2 MarkupSafe Werkzeug selenium
+      # Install project dependencies
+      - run:
+          name: Install project dependencies
+          command: |
+            pip install --upgrade pip # Upgrade pip (optional)
+            pip install pytest Flask click itsdangerous Jinja2 MarkupSafe Werkzeug selenium
 
-   # Run your Selenium tests
-   - run:
-     name: Run Selenium tests
-     command: |
-      python tests/selenium_driver_code.py
+      # Run your Selenium tests
+      - run:
+          name: Run Selenium tests
+          command: |
+            python tests/selenium_driver_code.py
 
 workflows:
- version: 2
- build:
-  jobs:
-   - build
+  version: 2
+  build:
+    jobs:
+      - build

@@ -3,26 +3,10 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/python:3.9.9
+      - image: circleci/python:3.9.9-buster
 
     steps:
       - checkout
-
-      # Install Chrome and ChromeDriver
-      - run:
-          name: Install Chrome and ChromeDriver
-          command: |
-            # Install Chrome
-            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-            sudo dpkg -i google-chrome-stable_current_amd64.deb
-            sudo apt-get install -f
-
-            # Install ChromeDriver
-            LATEST=$(wget -q -O - http://chromedriver.storage.googleapis.com/LATEST_RELEASE)
-            wget http://chromedriver.storage.googleapis.com/$LATEST/chromedriver_linux64.zip
-            unzip chromedriver_linux64.zip
-            sudo mv chromedriver /usr/local/bin/chromedriver
-            sudo chmod +x /usr/local/bin/chromedriver
 
       # Install dependencies
       - run:

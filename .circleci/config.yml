@@ -8,6 +8,12 @@ jobs:
     steps:
       - checkout
 
+      # Fix permission issue with apt lists directory
+      - run:
+          name: Fix permission issue
+          command: |
+            sudo chmod -R 755 /var/lib/apt/lists
+
       # Install Python and pip
       - run:
           name: Install Python and pip

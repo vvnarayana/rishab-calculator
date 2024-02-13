@@ -16,7 +16,6 @@ jobs:
             pip install --upgrade pip # Upgrade pip (optional)
             pip install pytest Flask click itsdangerous Jinja2 MarkupSafe Werkzeug selenium
 
-      # Run your Selenium tests
       - run:
           name: Run Selenium tests
           command: |

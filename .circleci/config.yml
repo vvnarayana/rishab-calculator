@@ -3,18 +3,17 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: python:3.9.9  # Python Docker image with Python 3.9.9
-      - image: selenium/standalone-chrome:latest  # Chrome Docker image with Selenium
+      - image: selenium/standalone-chrome:latest  # Includes Python and Chrome
 
     steps:
       - checkout
 
-      # Install project dependencies
+      # Install project dependencies (if any)
       - run:
-          name: Install project dependencies
+          name: Install project dependencies (optional)
           command: |
             pip install --upgrade pip  # Upgrade pip (optional)
-            pip install pytest Flask click itsdangerous Jinja2 MarkupSafe Werkzeug selenium
+            pip install pytest Flask click itsdangerous Jinja2 MarkupSafe Werkzeug
 
       # Run your Selenium tests
       - run:

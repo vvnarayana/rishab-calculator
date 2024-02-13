@@ -1,5 +1,6 @@
+selenium==4.16.0
+Flask==3.0.0
 click==7.1.2
-Flask==1.1.2
 itsdangerous==1.1.0
 Jinja2==3.0.2
 MarkupSafe==2.0.1

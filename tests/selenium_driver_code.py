@@ -14,7 +14,7 @@ driver = webdriver.Remote(
 )
 
 # Open the Flask app URL
-app_url = 'http://localhost:5000'
+app_url = 'host.docker.internal:5000'
 driver.get(app_url)
 
 passed_tests = 0
@@ -37,7 +37,7 @@ try:
     ]
 
     for test_case in test_cases:
-        wait = WebDriverWait(driver, 30)  # Increased timeout duration to 30 seconds
+        wait = WebDriverWait(driver, 15)
 
         num_one_input = wait.until(EC.presence_of_element_located((By.NAME, "number_one")))
         num_two_input = wait.until(EC.presence_of_element_located((By.NAME, "number_two")))
@@ -52,8 +52,7 @@ try:
         operation_select = Select(input_type)
         operation_select.select_by_value(test_case[2].lower())
 
-        # Wait for the Calculate button to be clickable
-        calc_button = wait.until(EC.element_to_be_clickable((By.ID, "calculate_btn")))
+        calc_button = driver.find_element(By.ID, "calculate_btn")
         calc_button.click()
 
         result_element = wait.until(EC.visibility_of_element_located((By.ID, "result")))

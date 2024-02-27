@@ -1,62 +1,11 @@
 version: 2.1
+
 executors:
   python-executor:
     docker:
       - image: cimg/python:3.8.4
 
-orbs:
-  python: circleci/python@2.1.1
-  jira: circleci/jira@2.1.0
-
 jobs:
-  builds:
-    working_directory: ~/Flask-calculator
-    executor: python-executor
-    steps:
-      - checkout  # Checkout your source code
-      - run:
-          name: Install dependencies
-          command: pip install -r requirements.txt
-      - run:
-          name: Build Script
-          command: |
-            pwd
-            chmod 777 build.sh
-            ls -la
-            ./build.sh
-            pwd
-            ls -la
-      - run:
-          name: Python Version
-          command: python3 --version
-      - run:
-          name: Test
-          command: |
-            cd /home/circleci
-            ls -lrth
-      - run:
-          name: Artifact Archiving
-          command: |
-            pwd
-            chmod 777 artifact.sh
-            ls -la
-            ./artifact.sh
-      - jira/notify:
-          pipeline_id: << pipeline.id >>
-          pipeline_number: << pipeline.number >>
-
-  run_tests:
-    working_directory: ~/Flask-calculator
-    docker:
-      - image: "cimg/python:3.8.4"
-    steps:
-      - checkout
-      - python/install-packages:
-          pkg-manager: pip
-      - run:
-          name: Run test
-          command: pytest
-
   deploy:
     working_directory: ~/Flask-calculator
     docker:
@@ -64,37 +13,49 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Environment
-          command: |
-            cat /etc/os-release
-            sudo sed -i 's/stretch/buster/g' /etc/apt/sources.list
-            sudo apt-get update
-      - run:
           name: Azure App Service Deploy
           command: |
-            pwd
-            chmod 777 artifact.sh
-            ls -la
-            ./artifact.sh
-            pwd
-            ls -lrth
             curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
             az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
             az account set --subscription $AZURE_SUBSCRIPTION_ID
             az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
             az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
-      - jira/notify:
-          environment: staging
-          environment_type: staging
-          job_type: deployment
-          pipeline_id: << pipeline.id >>
-          pipeline_number: << pipeline.number >>
+
+  build:
+    docker:
+      - image: python:3.9.9  # Python Docker image with Python 3.9.9
+      - image: selenium/standalone-chrome:latest  # Chrome Docker image with Selenium
+
+    steps:
+      - checkout
+
+      # Install project dependencies
+      - run:
+          name: Install project dependencies
+          command: |
+            pip install --upgrade pip  # Upgrade pip (optional)
+            pip install pytest Flask click itsdangerous Jinja2 MarkupSafe Werkzeug selenium
+
+      # Start Flask application
+      - run:
+          name: Start Flask application
+          command: |
+            python app.py &  # Run Flask application in the background
+
+      # Wait for Flask application to start
+      - run:
+          name: Wait for Flask application to start
+          command: sleep 5  # Adjust the sleep duration as needed
+
+      # Run Selenium tests
+      - run:
+          name: Run Selenium tests
+          command: |
+            python tests/selenium_driver_code.py
 
 workflows:
-  build_and_test_deploy:
+  version: 2
+  build_and_deploy:
     jobs:
-      - builds:
-          context: Jira
-      - run_tests
-      - deploy:
-          context: Jira
+      - deploy
+      - build

@@ -1,40 +1,100 @@
 version: 2.1
+executors:
+  python-executor:
+    docker:
+      - image: cimg/python:3.8.4
+
+orbs:
+  python: circleci/python@2.1.1
+  jira: circleci/jira@2.1.0
 
 jobs:
-  build:
-    docker:
-      - image: python:3.9.9  # Python Docker image with Python 3.9.9
-      - image: selenium/standalone-chrome:latest  # Chrome Docker image with Selenium
+  builds:
+    working_directory: ~/Flask-calculator
+    executor: python-executor
+    steps:
+      - checkout  # Checkout your source code
+      - run:
+          name: Install dependencies
+          command: pip install -r requirements.txt
+      - run:
+          name: Build Script
+          command: |
+            pwd
+            chmod 777 build.sh
+            ls -la
+            ./build.sh
+            pwd
+            ls -la
+      - run:
+          name: Python Version
+          command: python3 --version
+      - run:
+          name: Test
+          command: |
+            cd /home/circleci
+            ls -lrth
+      - run:
+          name: Artifact Archiving
+          command: |
+            pwd
+            chmod 777 artifact.sh
+            ls -la
+            ./artifact.sh
+      - jira/notify:
+          pipeline_id: << pipeline.id >>
+          pipeline_number: << pipeline.number >>
 
+  run_tests:
+    working_directory: ~/Flask-calculator
+    docker:
+      - image: "cimg/python:3.8.4"
     steps:
       - checkout
-
-      # Install project dependencies
+      - python/install-packages:
+          pkg-manager: pip
       - run:
-          name: Install project dependencies
+          name: Run test
+          command: pytest
+
+  deploy:
+    working_directory: ~/Flask-calculator
+    docker:
+      - image: cimg/azure:2023.09
+    steps:
+      - checkout
+      - run:
+          name: Environment
           command: |
-            pip install --upgrade pip  # Upgrade pip (optional)
-            pip install pytest Flask click itsdangerous Jinja2 MarkupSafe Werkzeug selenium
-
-      # Start Flask application
+            cat /etc/os-release
+            sudo sed -i 's/stretch/buster/g' /etc/apt/sources.list
+            sudo apt-get update
       - run:
-          name: Start Flask application
+          name: Azure App Service Deploy
           command: |
-            python app.py &  # Run Flask application in the background
-
-      # Wait for Flask application to start
-      - run:
-          name: Wait for Flask application to start
-          command: sleep 5  # Adjust the sleep duration as needed
-
-      # Run Selenium tests
-      - run:
-          name: Run Selenium tests
-          command: |
-            python tests/selenium_driver_code.py
+            pwd
+            chmod 777 artifact.sh
+            ls -la
+            ./artifact.sh
+            pwd
+            ls -lrth
+            curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+            az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+            az account set --subscription $AZURE_SUBSCRIPTION_ID
+            az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
+            az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
+      - jira/notify:
+          environment: staging
+          environment_type: staging
+          job_type: deployment
+          pipeline_id: << pipeline.id >>
+          pipeline_number: << pipeline.number >>
 
 workflows:
-  version: 2
-  build:
+  build_and_test_deploy:
     jobs:
-      - build
+      - builds:
+          context: Jira
+      - run_tests
+      - deploy:
+          context: Jira

@@ -14,7 +14,7 @@ driver = webdriver.Remote(
 )
 
 # Open the Flask app URL
-app_url = 'host.docker.internal:5000'
+app_url = 'circleci.azurewebsites.net'
 driver.get(app_url)
 
 passed_tests = 0

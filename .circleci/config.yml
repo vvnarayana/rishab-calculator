@@ -27,25 +27,21 @@ jobs:
           name: Wait for Flask application to start
           command: sleep 5  # Adjust the sleep duration as needed
 
-    
-
       # Azure App Service Deploy
       - run:
           name: Azure App Service Deploy
           command: |
-            pwd
-            chmod 777 artifact.sh
-            ls -la
-            ./artifact.sh
-            pwd 
-            ls -lrth
-            curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-            az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-            az account set --subscription $AZURE_SUBSCRIPTION_ID
-            az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
-            az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
-            
-       # Run Selenium tests
+            cd /root/project  # Change to the project directory
+            zip -r Flask-calculator.zip .  # Zip the project files
+            chmod +x artifact.sh
+            cp Flask-calculator.zip /root/project/Flask-calculator/Flask-calculator.zip  # Copy the zip file to the project directory
+            curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash  # Install Azure CLI
+            az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID  # Login to Azure
+            az account set --subscription $AZURE_SUBSCRIPTION_ID  # Set the Azure subscription
+            az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip  # Configure Azure web app deployment
+            az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME  # Deploy the web app
+
+      # Run Selenium tests
       - run:
           name: Run Selenium tests
           command: |

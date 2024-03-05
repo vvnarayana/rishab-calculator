@@ -54,7 +54,8 @@ jobs:
           name: Environment
           command: |
             cat /etc/os-release
-            sudo apt-get update
+            sed -i 's/stretch/buster/g' /etc/apt/sources.list
+            apt-get update
       - run:
           name: Azure App Service Deploy
           command: |

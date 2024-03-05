@@ -97,16 +97,24 @@ jobs:
             apt-get update
             apt-get install -y zip
 
+      # Generate artifact
+      - run:
+          name: Generate artifact
+          command: |
+            chmod +x artifact.sh
+            ./artifact.sh
+
+      # List contents of directory
+      - run:
+          name: List contents of project directory
+          command: ls -la
+
       # Azure App Service Deploy
       - run:
           name: Azure App Service Deploy
           command: |
             pwd
-            chmod 777 artifact.sh
             ls -la
-            ./artifact.sh
-            pwd 
-            ls -lrth
             curl -sL https://aka.ms/InstallAzureCLIDeb | bash
             az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
             az account set --subscription $AZURE_SUBSCRIPTION_ID
@@ -124,3 +132,4 @@ workflows:
   build:
     jobs:
       - build
+

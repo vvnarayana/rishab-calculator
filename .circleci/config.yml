@@ -51,6 +51,15 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Environment
+          command: |
+            cat /etc/os-release
+            sudo mkdir -p /var/lib/apt/lists/partial
+            sudo chmod 755 /var/lib/apt/lists/partial
+            sudo sed -i '/apt.kubernetes.io/s/^/#/' /etc/apt/sources.list
+            sudo sed -i 's/stretch/buster/g' /etc/apt/sources.list
+            sudo apt-get update
+      - run:
           name: Azure App Service Deploy
           command: |
             pwd
@@ -68,7 +77,7 @@ jobs:
   run_tests:
     working_directory: ~/Flask-calculator
     docker:
-      - image: "cimg/python:3.8.4"
+      - image: "cimg/python:3.9.9"
     steps: 
       - checkout 
       - python/install-packages: 

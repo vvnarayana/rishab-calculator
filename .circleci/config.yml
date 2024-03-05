@@ -2,7 +2,7 @@ version: 2.1
 executors:
   python-executor:
     docker:
-      - image: cimg/python:3.8.4      
+      - image: cimg/python:3.9.9      
 orbs:
     python: circleci/python@2.1.1
     jira: circleci/jira@2.1.0
@@ -54,7 +54,6 @@ jobs:
           name: Environment
           command: |
             cat /etc/os-release
-            sudo sed -i 's/stretch/buster/g' /etc/apt/sources.list
             sudo apt-get update
       - run:
           name: Azure App Service Deploy
@@ -70,12 +69,6 @@ jobs:
             az account set --subscription $AZURE_SUBSCRIPTION_ID
             az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
             az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
-      - jira/notify:
-          environment: staging
-          environment_type: staging
-          job_type: deployment
-          pipeline_id: << pipeline.id >>
-          pipeline_number: << pipeline.number >>
   
   run_tests:
     working_directory: ~/Flask-calculator

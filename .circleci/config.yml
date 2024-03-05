@@ -58,7 +58,7 @@ jobs:
             sudo chmod 755 /var/lib/apt/lists/partial
             sudo sed -i '/apt.kubernetes.io/s/^/#/' /etc/apt/sources.list
             sudo sed -i 's/stretch/buster/g' /etc/apt/sources.list
-            sudo apt-get update
+            apt-get update
       - run:
           name: Azure App Service Deploy
           command: |

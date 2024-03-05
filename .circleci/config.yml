@@ -98,12 +98,12 @@ workflows:
   build_and_test_deploy:
     jobs:
       - builds:
+          context: Jira           
+      - deploy:
+          requires:
+            - builds
           context: Jira
       - run_tests:
           requires:
-            - builds        
-      - deploy:
-          requires:
-            - run_tests
-          context: Jira
+            - deploy
           

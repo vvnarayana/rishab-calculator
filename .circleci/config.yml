@@ -7,6 +7,7 @@ executors:
 orbs:
     python: circleci/python@2.1.1
     jira: circleci/jira@2.1.0
+    aws-cli: circleci/aws-cli@2.0.3
  
 jobs:
   builds:
@@ -81,15 +82,23 @@ jobs:
     steps: 
       - checkout 
       - python/install-packages: 
-          pkg-manager: pip 
-      - run: 
-           name: Run test
-           command: pytest
-      # Run Selenium tests
+          pkg-manager: pip
+      - aws-cli/setup
       - run:
-          name: Run Selenium tests
+          name: Run Selenium Tests on AWS EC2
           command: |
-            python tests/selenium_driver_code.py
+            # Connect to the EC2 instance using the Elastic IP
+            ELASTIC_IP=34.207.198.25
+            ssh -o StrictHostKeyChecking=no ec2-user@${ELASTIC_IP} '
+              # Navigate to the directory with your Selenium tests
+              cd /home/ec2-user/
+              
+              # Run your Selenium test scripts or test suite
+              python selenium_driver_code.py -v
+              
+              # Store test results on the EC2 instance
+              mv test-results.xml /home/ec2-user/test-results
+            '
 
 workflows:
   build_and_test_deploy:

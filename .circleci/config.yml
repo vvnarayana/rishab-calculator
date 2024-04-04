@@ -2,7 +2,8 @@ version: 2.1
 executors:
   python-executor:
     docker:
-      - image: cimg/python:3.9.9      
+      - image: cimg/python:3.9.9    
+      - image: selenium/standalone-chrome:latest  # Chrome Docker image with Selenium  
 orbs:
     python: circleci/python@2.1.1
     jira: circleci/jira@2.1.0
@@ -76,7 +77,7 @@ jobs:
   run_tests:
     working_directory: ~/Flask-calculator
     docker:
-      - image: "cimg/python:3.8.4"
+      - image: "cimg/python:3.9.9"
     steps: 
       - checkout 
       - python/install-packages: 
@@ -88,7 +89,7 @@ jobs:
       - run:
           name: Run Selenium tests
           command: |
-            python tests/selenium_driver_code.py          
+            python tests/selenium_driver_code.py
 
 workflows:
   build_and_test_deploy:

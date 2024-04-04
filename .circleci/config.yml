@@ -3,7 +3,6 @@ executors:
   python-executor:
     docker:
       - image: cimg/python:3.9.9    
-      - image: selenium/standalone-chrome:latest  # Chrome Docker image with Selenium  
 orbs:
     python: circleci/python@2.1.1
     jira: circleci/jira@2.1.0
@@ -87,9 +86,11 @@ jobs:
       - run:
           name: Run Selenium Tests on AWS EC2
           command: |
+            mv /home/circleci/Flask-calculator/circleci.pem /home/circleci/
+            chmod 777 /home/circleci/circleci.pem
             # Connect to the EC2 instance using the Elastic IP
             ELASTIC_IP=34.207.198.25
-            ssh -o StrictHostKeyChecking=no ec2-user@${ELASTIC_IP} '
+            ssh -o StrictHostKeyChecking=no -i /home/circleci/circleci.pem ec2-user@${ELASTIC_IP} '
               # Navigate to the directory with your Selenium tests
               cd /home/ec2-user/
               

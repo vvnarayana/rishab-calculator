@@ -54,11 +54,10 @@ jobs:
           name: Environment
           command: |
             cat /etc/os-release
-            mkdir -p /var/lib/apt/lists/partial
-            chmod 755 /var/lib/apt/lists/partial
-            sed -i '/apt.kubernetes.io/s/^/#/' /etc/apt/sources.list
-            sed -i 's/stretch/buster/g' /etc/apt/sources.list
-            apt-get update
+            sudo mkdir -p /var/lib/apt/lists/partial
+            sudo chmod 755 /var/lib/apt/lists/partial
+            sudo rm /etc/apt/sources.list.d/kubernetes.list
+            sudo apt-get update
       - run:
           name: Azure App Service Deploy
           command: |

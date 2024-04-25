@@ -86,11 +86,11 @@ jobs:
       - run:
           name: Run Selenium Tests on AWS EC2
           command: |
-            mv /home/circleci/Flask-calculator/circleci.pem /home/circleci/
-            chmod 600 /home/circleci/circleci.pem
+            mv /home/circleci/Flask-calculator/Selenium.pem /home/circleci/
+            chmod 600 /home/circleci/Selenium.pem
             # Connect to the EC2 instance using the Elastic IP
-            ELASTIC_IP=34.207.198.25
-            ssh -o StrictHostKeyChecking=no -i /home/circleci/circleci.pem ec2-user@${ELASTIC_IP} '
+            ELASTIC_IP=54.166.225.252
+            ssh -o StrictHostKeyChecking=no -i /home/circleci/circleci.pem administrator@${ELASTIC_IP} '
               # Navigate to the directory with your Selenium tests
               cd /home/ec2-user/
               

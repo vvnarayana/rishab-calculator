@@ -90,7 +90,8 @@ jobs:
             chmod 600 /home/circleci/Selenium.pem
             
             # Install the required dependencies (e.g., rdesktop, python-rdp)
-            apt-get update && apt-get install -y rdesktop python-rdp
+            sudo apt-get update
+            sudo apt-get install -y rdesktop python-rdp
 
             # Connect to the Windows Server using RDP
             WINDOWS_SERVER_IP=54.166.225.252

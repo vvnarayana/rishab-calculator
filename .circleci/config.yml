@@ -84,21 +84,19 @@ jobs:
           pkg-manager: pip
       - aws-cli/setup
       - run:
-          name: Run Selenium Tests on AWS EC2
+          name: Run Selenium Tests on Windows Server
           command: |
             mv /home/circleci/Flask-calculator/Selenium.pem /home/circleci/
             chmod 600 /home/circleci/Selenium.pem
-            # Connect to the EC2 instance using the Elastic IP
-            ELASTIC_IP=54.166.225.252
-            ssh -o StrictHostKeyChecking=no -i /home/circleci/circleci.pem administrator@${ELASTIC_IP} '
+
+              # Connect to the Windows Server using the Elastic IP
+              ELASTIC_IP=54.166.225.252
+              ssh -o StrictHostKeyChecking=no -i /home/circleci/Selenium.pem administrator@${ELASTIC_IP} '
               # Navigate to the directory with your Selenium tests
-              cd /home/ec2-user/
-              
+              cd C:\Users\Administrator\Downloads
+
               # Run your Selenium test scripts or test suite
               python selenium_driver_code.py -v
-              
-              # Store test results on the EC2 instance
-              mv test-results.xml /home/ec2-user/test-results
             '
 
 workflows:

@@ -101,20 +101,11 @@ jobs:
       - run:
           name: Execute Python script on Windows Server
           command: |
-            import winrm
-
-            username = 'administrator'
-            password = '$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%'
-            server_ip = '3.81.186.24'
-            selenium_file_path = 'C:\\path\\to\\selenium_file.py'
-
-            session = winrm.Session(server_ip, auth=(username, password))
-            response = session.run_cmd('python', [selenium_file_path])
-
-            print(response.std_out)
-            print(response.std_err)
-
-
+            pwd
+            ls -lrth
+            pip3 install pywinrm
+            python3 run_selenium.py
+            
 workflows:
   build_and_test_deploy:
     jobs:

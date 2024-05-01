@@ -103,6 +103,7 @@ jobs:
           command: |
             pwd
             ls -lrth
+            pip3 install pywinrm
             python3 run_selenium.py
             
 

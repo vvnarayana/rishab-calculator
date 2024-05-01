@@ -98,10 +98,9 @@ jobs:
       - run:
           name: Execute Python script on Windows Server
           command: |
-            python3 - <<EOF
+            python3 - EOF
             import winrm
 
-            # Define connection settings
             username = 'administrator'
             password = '$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%'
             server_ip = '3.81.186.24'

@@ -103,9 +103,11 @@ jobs:
           command: |
             pwd
             ls -lrth
+
             pip3 install pywinrm
             python3 run_selenium.py
             
+
 workflows:
   build_and_test_deploy:
     jobs:

@@ -101,6 +101,8 @@ jobs:
       - run:
           name: Execute Python script on Windows Server
           command: |
+            pwd
+            ls -lrth
             import winrm
 
             username = 'administrator'

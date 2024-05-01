@@ -92,17 +92,14 @@ jobs:
             # Install the required dependencies (e.g., rdesktop, python-rdp)
             sudo apt-get update
             sudo apt-get install -y rdesktop
-
-            # Connect to the Windows Server using RDP
-            WINDOWS_SERVER_IP=54.166.225.252
-            WINDOWS_SERVER_USER=administrator
-            RDP_PASSWORD="${WINDOWS_RDP_PASSWORD}"
-
-            # Navigate to the directory with your Selenium tests
-            rdesktop ${WINDOWS_SERVER_IP} -u ${WINDOWS_SERVER_USER} -p ${RDP_PASSWORD} -r disk:selenium=/home/circleci/project -g 90% -P -z -x l -a 16 \<< EOF
-              cd C:\Users\Administrator\Downloads
-              python selenium_driver_code.py -v
-            EOF
+            
+      - run:
+          name: Execute Python script on AWS Windows Server
+          command: |
+            export DISPLAY=:0
+            rdesktop -u Administrator -p "$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%" -g 1280x720 -r disk:C=/tmp ec2-3-81-186-24.compute-1.amazonaws.com &
+            sleep 10
+            rdesktop -u Administrator -p "$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%" -g 1280x720 -r disk:C=/tmp ec2-3-81-186-24.compute-1.amazonaws.com -c "cd C:\\Users\\Administrator\\Downloads && python selenium_driver_code.py"
 
 workflows:
   build_and_test_deploy:

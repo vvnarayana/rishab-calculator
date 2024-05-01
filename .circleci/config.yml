@@ -1,141 +1,130 @@
-# version: 2.1
-
-# jobs:
-#   build:
-#     docker:
-#       - image: python:3.9.9  # Python Docker image with Python 3.9.9
-#       - image: selenium/standalone-chrome:latest  # Chrome Docker image with Selenium
-
-#     steps:
-#       - checkout
-
-#       # Install project dependencies
-#       - run:
-#           name: Install project dependencies
-#           command: |
-#             pip install --upgrade pip  # Upgrade pip (optional)
-#             pip install pytest Flask click itsdangerous Jinja2 MarkupSafe Werkzeug selenium
-
-#       # Start Flask application
-#       - run:
-#           name: Start Flask application
-#           command: |
-#             python app.py &  # Run Flask application in the background
-
-#       # Wait for Flask application to start
-#       - run:
-#           name: Wait for Flask application to start
-#           command: sleep 5  # Adjust the sleep duration as needed
-
-#       # Install zip command
-#       - run:
-#           name: Install zip command
-#           command: |
-#             sudo apt-get update
-#             sudo apt-get install -y zip
-
-#       # Azure App Service Deploy
-#       - run:
-#           name: Azure App Service Deploy
-#           command: |
-#             pwd
-#             chmod 777 artifact.sh
-#             ls -la
-#             ./artifact.sh
-#             pwd 
-#             ls -lrth
-#             curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-#             az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-#             az account set --subscription $AZURE_SUBSCRIPTION_ID
-#             az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
-#             az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
-            
-#        # Run Selenium tests
-#       - run:
-#           name: Run Selenium tests
-#           command: |
-#             python tests/selenium_driver_code.py
-
-# workflows:
-#   version: 2
-#   build:
-#     jobs:
-#       - build
 version: 2.1
-
-jobs:
-  build:
+executors:
+  python-executor:
     docker:
-      - image: python:3.9.9  # Python Docker image with Python 3.9.9
-      - image: selenium/standalone-chrome:latest  # Chrome Docker image with Selenium
+      - image: cimg/python:3.9.9    
+orbs:
+    python: circleci/python@2.1.1
+    jira: circleci/jira@2.1.0
+    aws-cli: circleci/aws-cli@2.0.3
+ 
+jobs:
+  builds:
+    working_directory: ~/Flask-calculator
+    executor: python-executor
+    steps:
+      - checkout  # Checkout your source code
+      - run:
+          name: Install dependencies
+          command: pip install -r requirements.txt   
+      - run:
+          name: Build Script
+          command: |
+            pwd
+            chmod 777 build.sh
+            ls -la
+            ./build.sh
+            pwd
+            ls -la     
+      - run: 
+          name: Python Version
+          command: python3 --version
+      - run: 
+          name: Test
+          command: |
+            cd /home/circleci
+            ls -lrth
+      - run:
+          name: Artifact Archiving
+          command: |
+            pwd
+            chmod 777 artifact.sh
+            ls -la
+            ./artifact.sh
+      - jira/notify:
+          pipeline_id: << pipeline.id >>
+          pipeline_number: << pipeline.number >>      
 
+  deploy:
+    working_directory: ~/Flask-calculator
+    docker:
+      - image: cimg/azure:2023.09
     steps:
       - checkout
-
-      # Install project dependencies
       - run:
-          name: Install project dependencies
+          name: Environment
           command: |
-            pip install --upgrade pip  # Upgrade pip (optional)
-            pip install pytest Flask click itsdangerous Jinja2 MarkupSafe Werkzeug selenium
-
-      # Start Flask application
-      - run:
-          name: Start Flask application
-          command: |
-            python app.py &  # Run Flask application in the background
-
-      # Wait for Flask application to start
-      - run:
-          name: Wait for Flask application to start
-          command: sleep 5  # Adjust the sleep duration as needed
-
-      # Install zip command
-      - run:
-          name: Install zip command
-          command: |
-            apt-get update
-            apt-get install -y zip
-
-      # Generate artifact
-      - run:
-          name: Generate artifact
-          command: |
-            chmod +x artifact.sh
-            ./artifact.sh
-
-      # List contents of directory
-      - run:
-          name: List contents of project directory
-          command: ls -la
-
-      # Azure App Service Deploy
+            cat /etc/os-release
+            sudo mkdir -p /var/lib/apt/lists/partial
+            sudo chmod 755 /var/lib/apt/lists/partial
+            sudo rm /etc/apt/sources.list.d/kubernetes.list
+            sudo apt-get update
       - run:
           name: Azure App Service Deploy
           command: |
-            
             pwd
             chmod 777 artifact.sh
             ls -la
             ./artifact.sh
             pwd 
             ls -lrth
- 
-            curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+            curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
             az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
             az account set --subscription $AZURE_SUBSCRIPTION_ID
             az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
             az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
-            
-       # Run Selenium tests
+  
+  run_tests:
+    working_directory: ~/Flask-calculator
+    docker:
+      - image: "cimg/python:3.9.9"
+    steps: 
+      - checkout 
+      - python/install-packages: 
+          pkg-manager: pip
+      - aws-cli/setup
       - run:
-          name: Run Selenium tests
+          name: Downloading Dependencies for Selenium code execution  
           command: |
-            python tests/selenium_driver_code.py
+            mv /home/circleci/Flask-calculator/Selenium.pem /home/circleci/
+            chmod 600 /home/circleci/Selenium.pem
+            
+            # Install the required dependencies (e.g., rdesktop, python-rdp)
+            sudo apt-get update
+            sudo apt-get install -y rdesktop
+            sudo apt-get install python3
+            sudo apt-get install -y python3-pip
+            sudo pip3 install pywinrm
+            pip3 install selenium
+
+      # Execute Python script on Windows Server using WinRM
+      - run:
+          name: Execute Python script on Windows Server
+          command: |
+            import winrm
+
+            username = 'administrator'
+            password = '$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%'
+            server_ip = '3.81.186.24'
+            selenium_file_path = 'C:\\path\\to\\selenium_file.py'
+
+            session = winrm.Session(server_ip, auth=(username, password))
+            response = session.run_cmd('python', [selenium_file_path])
+
+            print(response.std_out)
+            print(response.std_err)
+
 
 workflows:
-  version: 2
-  build:
+  build_and_test_deploy:
     jobs:
-      - build
-
+      - builds:
+          context: Jira           
+      - deploy:
+          requires:
+            - builds
+          context: Jira
+      - run_tests:
+          requires:
+            - deploy
+          

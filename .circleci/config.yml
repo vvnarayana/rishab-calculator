@@ -92,14 +92,28 @@ jobs:
             # Install the required dependencies (e.g., rdesktop, python-rdp)
             sudo apt-get update
             sudo apt-get install -y rdesktop
-            
+            sudo pip3 install pywinrm
+
+      # Execute Python script on Windows Server using WinRM
       - run:
-          name: Execute Python script on AWS Windows Server
+          name: Execute Python script on Windows Server
           command: |
-            export DISPLAY=:0
-            rdesktop -u Administrator -p "$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%" -g 1280x720 -r disk:C=/tmp ec2-3-81-186-24.compute-1.amazonaws.com &
-            sleep 10
-            rdesktop -u Administrator -p "$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%" -g 1280x720 -r disk:C=/tmp ec2-3-81-186-24.compute-1.amazonaws.com -c "cd C:\\Users\\Administrator\\Downloads && python selenium_driver_code.py"
+            python3 - <<EOF
+            import winrm
+
+            # Define connection settings
+            username = 'administrator'
+            password = '$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%'
+            server_ip = '3.81.186.24'
+
+            # Create a WinRM session
+            session = winrm.Session(server_ip, auth=(username, password))
+
+            # Execute the Python script on the remote server
+            result = session.run_cmd('cmd', ['/c', 'python', 'C:\\Users\\Administrator\\Downloads\\selenium_driver_code.py'])
+            print(result.std_out)
+            print(result.std_err)
+            EOF
 
 workflows:
   build_and_test_deploy:

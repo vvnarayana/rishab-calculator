@@ -1,8 +1,8 @@
 import winrm
 
 username = 'administrator'
-password = 'your_windows_password'
-server_ip = 'windows_server_ip'
+password = '$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%'
+server_ip = '3.81.186.24'
 selenium_file_path = 'C:\\Users\\Administrator\\Downloads\\selenium_driver_code.py'
 
 session = winrm.Session(server_ip, auth=(username, password))

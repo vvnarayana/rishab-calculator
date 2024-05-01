@@ -92,6 +92,7 @@ jobs:
             # Install the required dependencies (e.g., rdesktop, python-rdp)
             sudo apt-get update
             sudo apt-get install -y rdesktop
+            sudo apt-get install -y python3-pip
             sudo pip3 install pywinrm
 
       # Execute Python script on Windows Server using WinRM

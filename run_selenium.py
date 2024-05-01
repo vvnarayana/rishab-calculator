@@ -1,6 +1,6 @@
-import winrm
+import winrm # type: ignore
 
-username = 'administrator'
+username = 'Administrator'
 password = '$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%'
 server_ip = '3.81.186.24'
 selenium_file_path = 'C:\\Users\\Administrator\\Downloads\\selenium_driver_code.py'

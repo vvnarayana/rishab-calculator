@@ -98,7 +98,7 @@ jobs:
       - run:
           name: Execute Python script on Windows Server
           command: |
-            ssh -i /home/circleci/Selenium.pem Administrator@3.81.186.24 "python 'C:/Users/Administrator/Downloads/selenium_driver_code.py'"
+            ssh -v -o StrictHostKeyChecking=no -i /home/circleci/Selenium.pem Administrator@3.81.186.24 "python 'C:/Users/Administrator/Downloads/selenium_driver_code.py'"
 
 workflows:
   build_and_test_deploy:

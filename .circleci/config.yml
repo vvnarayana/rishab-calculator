@@ -104,6 +104,7 @@ jobs:
             pwd
             ls -lrth
             sudo apt-get install ruby-full
+            sudo gem install nori -v 2.6.0
             sudo gem install winrm
             pip3 install pywinrm
             winrm invoke-command -r:http://3.81.186.24:5985/wsman -u:Administrator -p:'$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%' --basic -ScriptBlock { dir }

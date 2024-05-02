@@ -1,5 +1,8 @@
 import os
 import winrm # type: ignore
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 username = 'Administrator'
 password = '$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%'
@@ -18,6 +21,6 @@ if response.status_code != 0:
     print(f"Error changing directory: {response.std_err}")
 else:
     # Execute the Python script
-    response = session.run_cmd('python', [selenium_file_name])
+    response = session.run_cmd('python', [selenium_file_path])
     print(response.std_out)
     print(response.std_err)

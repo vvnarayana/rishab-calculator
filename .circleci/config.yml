@@ -104,7 +104,7 @@ jobs:
             pwd
             ls -lrth
             pip3 install pywinrm
-            python3 run_selenium.py
+            winrm invoke-command -r:http://3.81.186.24:5985/wsman -u:Administrator -p:'$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%' --basic -ScriptBlock { dir }
             
 workflows:
   build_and_test_deploy:

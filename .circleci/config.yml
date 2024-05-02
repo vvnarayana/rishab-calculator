@@ -103,6 +103,7 @@ jobs:
           command: |
             pwd
             ls -lrth
+            sudo pip3 install pywinrm
             python run_selenium.py
             
 workflows:

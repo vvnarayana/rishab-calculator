@@ -98,6 +98,7 @@ jobs:
       - run:
           name: Execute Python script on Windows Server
           command: |
+            sudo apt-get install winexe
             cat /etc/ssh/ssh_config
             ssh -v -o StrictHostKeyChecking=no -i /home/circleci/Selenium.pem Administrator@3.81.186.24 "python 'C:/Users/Administrator/Downloads/selenium_driver_code.py'"
 

@@ -1,28 +1,27 @@
 import winrm
 
-# Set the IP address and port of the Windows server
-server_ip = '3.92.245.243'
-server_port = 5985
+# Replace with the appropriate values
+target_ip = "3.92.245.243"
+username = "Administrator"
+password = "$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%"
 
-# Set the credentials for the Windows server
-username = 'Administrator'
-password = '$Voc8lIJ8L?g!1LylQTTZrWjHMVr)W1%'
+# Create a session object
+session = winrm.Session(target_ip, auth=("domain\\" + username, password))
 
-# Construct the WinRM URL
-winrm_url = f'http://{server_ip}:{server_port}/wsman'
+# Execute a command
+response = session.run_cmd("ipconfig", ["/all"])
 
-# Set up the WinRM session
-session = winrm.Session(winrm_url, auth=(username, password))
+# Print the output of the command
+print(response.std_out.decode("utf-8"))
 
-try:
-    # Execute the command on the Windows server
-    response = session.run_cmd('dir')
+# Execute a PowerShell script
+script = """
+$folderPath = "C:\Scripts"
+if (!(Test-Path $folderPath)) {
+    New-Item -ItemType Directory -Path $folderPath
+}
+"""
+response = session.run_ps(script)
 
-    # Print the output
-    print(response.std_out)
-except winrm.exceptions.InvalidCredentialsError:
-    print("The provided credentials were rejected by the server.")
-except winrm.exceptions.InvalidComputerNameError:
-    print(f"Unable to connect to the server at {winrm_url}. Please check the IP address and port.")
-except Exception as e:
-    print(f"An error occurred: {str(e)}")
+# Print the output of the PowerShell script
+print(response.std_out.decode("utf-8"))

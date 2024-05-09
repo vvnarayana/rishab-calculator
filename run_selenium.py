@@ -1,4 +1,3 @@
-import os
 import winrm
 
 # Set the IP address and port of the Windows server

@@ -109,3 +109,4 @@ workflows:
           context: Jira
       - run_tests:
           requires:
+            - deploy

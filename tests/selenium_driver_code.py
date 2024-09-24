@@ -1,4 +1,6 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -6,16 +8,28 @@ from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException
 import traceback
 import math
+import os
 
-# Start the browser session
-driver = webdriver.Remote(
-    command_executor='http://localhost:4444/wd/hub',
-    options=webdriver.ChromeOptions()
-)
+#driver = webdriver.Chrome()
 
 # Open the Flask app URL
-app_url = 'circleci.azurewebsites.net'
+app_url = 'https://circleci.azurewebsites.net/'
+print("Navigating to:", app_url)
+#driver.get(app_url)
+#service = Service(executable_path=r'/usr/local/bin/chromedriver')
+options = webdriver.ChromeOptions()
+options.add_argument('enable-automation')
+options.add_argument('--headless')
+options.add_argument('--no-sandbox')
+options.add_argument("--disable-extensions")
+options.add_argument("--dns-prefetch-disable")
+options.add_argument("--disable-gpu")
+#options.add_argument('--disable-dev-shm-usage')
+options.add_argument('--remote-debugging-pipe')
+options.add_experimental_option("excludeSwitches", ['enable-automation'])
+driver = webdriver.Chrome(options=options)
 driver.get(app_url)
+
 
 passed_tests = 0
 total_tests = 0

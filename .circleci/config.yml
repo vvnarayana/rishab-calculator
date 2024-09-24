@@ -2,18 +2,17 @@ version: 2.1
 executors:
   python-executor:
     docker:
-      - image: cimg/python:3.9.9    
+      - image: cimg/python:3.9.9
 orbs:
     python: circleci/python@2.1.1
-    jira: circleci/jira@2.1.0
     aws-cli: circleci/aws-cli@2.0.3
- 
+    browser-tools: circleci/browser-tools@1.4.8
 jobs:
   builds:
     working_directory: ~/Flask-calculator
     executor: python-executor
     steps:
-      - checkout  # Checkout your source code
+      - checkout
       - run:
           name: Install dependencies
           command: pip install -r requirements.txt   
@@ -41,10 +40,6 @@ jobs:
             chmod 777 artifact.sh
             ls -la
             ./artifact.sh
-      - jira/notify:
-          pipeline_id: << pipeline.id >>
-          pipeline_number: << pipeline.number >>      
-
   deploy:
     working_directory: ~/Flask-calculator
     docker:
@@ -78,34 +73,31 @@ jobs:
     working_directory: ~/Flask-calculator
     docker:
       - image: "cimg/python:3.9.9"
+      - image: cimg/node:20.4.0-browsers
     steps: 
       - checkout 
       - python/install-packages: 
           pkg-manager: pip
       - aws-cli/setup
+      - browser-tools/install-chrome
+      - browser-tools/install-chromedriver
       - run:
-          name: Downloading Dependencies for Selenium code execution  
           command: |
-            mv /home/circleci/Flask-calculator/Selenium.pem /home/circleci/
-            chmod 600 /home/circleci/Selenium.pem
-            
-            # Install the required dependencies (e.g., rdesktop, python-rdp)
-            sudo apt-get update
-            sudo apt-get install -y rdesktop
-            sudo apt-get install python3
-            sudo apt-get install -y python3-pip
-            sudo pip3 install pywinrm
-            pip3 install selenium
-
-      # Execute Python script on Windows Server using WinRM
+            google-chrome --version
+            chromedriver --version
+          name: Check install
       - run:
-          name: Execute Python script on Windows Server
+          name: Run Selenium Tests
           command: |
+            whereis chrome
             pwd
-            ls -lrth
-            sudo pip3 install pywinrm
-            python run_selenium.py
-            
+            ls -lrtha
+            chmod 777 build.sh
+            ./build.sh 
+            ls -lrtha
+            cd tests
+            chmod 777 selenium_driver_code.py
+            python selenium_driver_code.py
 workflows:
   build_and_test_deploy:
     jobs:
@@ -117,5 +109,3 @@ workflows:
           context: Jira
       - run_tests:
           requires:
-            - deploy
-          

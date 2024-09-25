@@ -105,6 +105,8 @@ jobs:
       - run:
           name: Store Test Results
           command: |
+            pwd
+            ls -la
             mkdir -p test-results
             cp -r tests/test-results/* test-results/
       - store_test_results:

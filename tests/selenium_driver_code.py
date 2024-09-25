@@ -105,3 +105,4 @@ finally:
     driver.quit()
 
 print(f"{passed_tests}/{total_tests} test cases passed.")
+

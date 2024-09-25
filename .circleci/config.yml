@@ -1,12 +1,15 @@
 version: 2.1
+
 executors:
   python-executor:
     docker:
       - image: cimg/python:3.9.9
+
 orbs:
-    python: circleci/python@2.1.1
-    aws-cli: circleci/aws-cli@2.0.3
-    browser-tools: circleci/browser-tools@1.4.8
+  python: circleci/python@2.1.1
+  aws-cli: circleci/aws-cli@2.0.3
+  browser-tools: circleci/browser-tools@1.4.8
+
 jobs:
   builds:
     working_directory: ~/Flask-calculator
@@ -40,6 +43,7 @@ jobs:
             chmod 777 artifact.sh
             ls -la
             ./artifact.sh
+
   deploy:
     working_directory: ~/Flask-calculator
     docker:
@@ -98,6 +102,35 @@ jobs:
             cd tests
             chmod 777 selenium_driver_code.py
             python selenium_driver_code.py
+      - run:
+          name: Store Test Results
+          command: |
+            mkdir -p test-results
+            cp -r tests/test-results/* test-results/
+      - store_test_results:
+          path: test-results
+      - run:
+          name: Check Test Results
+          command: |
+            if grep -q "FAILED" test-results/*.txt; then
+              echo "Tests failed, triggering rollback"
+              exit 1
+            else
+              echo "Tests passed"
+            fi
+
+  rollback:
+    working_directory: ~/Flask-calculator
+    docker:
+      - image: cimg/azure:2023.09
+    steps:
+      - run:
+          name: Rollback to Previous Stable Build
+          command: |
+            az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+            az account set --subscription $AZURE_SUBSCRIPTION_ID
+            az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src previous-stable.zip
+
 workflows:
   build_and_test_deploy:
     jobs:
@@ -110,3 +143,13 @@ workflows:
       - run_tests:
           requires:
             - deploy
+          filters:
+            branches:
+              only: stage
+      - rollback:
+          requires:
+            - run_tests
+          filters:
+            branches:
+              only: stage
+          type: approval

@@ -112,7 +112,8 @@ jobs:
             mkdir test-results
             ls -la
             cd ..
-            mkdir test-results            
+            mkdir test-results   
+            ls -la         
             cp -r tests/test-results/* test-results/
       - store_test_results:
           path: test-results

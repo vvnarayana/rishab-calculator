@@ -107,14 +107,10 @@ jobs:
           name: Store Test Results
           command: |
             pwd
-            cd tests
             ls -la
-            mkdir test-results
-            ls -la
-            cd ..
             mkdir test-results   
             ls -la         
-            cp -r tests/test-results/* test-results/
+            cp -r tests/test_results.txt test-results/
       - store_test_results:
           path: test-results
       - run:

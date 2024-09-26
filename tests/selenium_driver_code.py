@@ -10,13 +10,10 @@ import traceback
 import math
 import os
 
-#driver = webdriver.Chrome()
-
 # Open the Flask app URL
 app_url = 'https://circleci.azurewebsites.net/'
 print("Navigating to:", app_url)
-#driver.get(app_url)
-#service = Service(executable_path=r'/usr/local/bin/chromedriver')
+
 options = webdriver.ChromeOptions()
 options.add_argument('enable-automation')
 options.add_argument('--headless')
@@ -24,15 +21,14 @@ options.add_argument('--no-sandbox')
 options.add_argument("--disable-extensions")
 options.add_argument("--dns-prefetch-disable")
 options.add_argument("--disable-gpu")
-#options.add_argument('--disable-dev-shm-usage')
 options.add_argument('--remote-debugging-pipe')
 options.add_experimental_option("excludeSwitches", ['enable-automation'])
 driver = webdriver.Chrome(options=options)
 driver.get(app_url)
 
-
 passed_tests = 0
 total_tests = 0
+output_lines = []
 
 try:
     test_cases = [
@@ -46,7 +42,7 @@ try:
         ("7", "0", "Multiply", 0),
         ("2.5", "1.5", "Multiply", 3.75),
         ("10", "2", "Divide", 5.0),
-        ("8", "0", "Divide", "Cannot divide by zero"),  # Adjusted expected result
+        ("8", "0", "Divide", "Cannot divide by zero"),
         ("7", "3", "Divide", 2.33),
     ]
 
@@ -80,29 +76,39 @@ try:
                 expected_result = actual_result_numeric
             else:
                 expected_result = float(actual_result_numeric)
-                
+
             tolerance = 0.01  # Adjust tolerance for rounding
             if math.isclose(expected_result, float(test_case[3]), rel_tol=tolerance):
-                print(f"Test passed for {test_case[:3]}. Expected: {float(test_case[3])}, Actual: {expected_result}")
+                result_line = f"Test passed for {test_case[:3]}. Expected: {float(test_case[3])}, Actual: {expected_result}"
                 passed_tests += 1
             else:
-                print(f"Test failed for {test_case[:3]}. Expected: {float(test_case[3])}, Actual: {expected_result}")
+                result_line = f"Test failed for {test_case[:3]}. Expected: {float(test_case[3])}, Actual: {expected_result}"
         else:
             if actual_result_numeric == test_case[3] or actual_result_numeric == "Cannot divide by zero":
-                print(f"Test passed for {test_case[:3]}. Expected: {test_case[3]}, Actual: {actual_result_numeric}")
+                result_line = f"Test passed for {test_case[:3]}. Expected: {test_case[3]}, Actual: {actual_result_numeric}"
                 passed_tests += 1
             else:
-                print(f"Test failed for {test_case[:3]}. Expected: {test_case[3]}, Actual: {actual_result_numeric}")
+                result_line = f"Test failed for {test_case[:3]}. Expected: {test_case[3]}, Actual: {actual_result_numeric}"
 
+        print(result_line)
+        output_lines.append(result_line)
         total_tests += 1
 
 except TimeoutException as e:
-    print(f"Timeout occurred while waiting for the element. Details: {e}")
+    error_line = f"Timeout occurred while waiting for the element. Details: {e}"
+    print(error_line)
+    output_lines.append(error_line)
     traceback.print_exc()
 
 finally:
     # Close the browser session
     driver.quit()
 
-print(f"{passed_tests}/{total_tests} test cases passed.")
+summary_line = f"{passed_tests}/{total_tests} test cases passed."
+print(summary_line)
+output_lines.append(summary_line)
 
+# Write the results to a file
+with open("test_results.txt", "w") as f:
+    for line in output_lines:
+        f.write(line + "\n")

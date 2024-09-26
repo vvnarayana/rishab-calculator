@@ -1,15 +1,12 @@
 version: 2.1
-
 executors:
   python-executor:
     docker:
       - image: cimg/python:3.9.9
-
 orbs:
   python: circleci/python@2.1.1
   aws-cli: circleci/aws-cli@2.0.3
   browser-tools: circleci/browser-tools@1.4.8
-
 jobs:
   builds:
     working_directory: ~/Flask-calculator
@@ -43,7 +40,6 @@ jobs:
             chmod 777 artifact.sh
             ls -la
             ./artifact.sh
-
   deploy:
     working_directory: ~/Flask-calculator
     docker:
@@ -91,61 +87,44 @@ jobs:
             chromedriver --version
           name: Check install
       - run:
-          name: Run Selenium Tests
+          name: run tests
           command: |
-            whereis chrome
-            pwd
-            ls -lrtha
-            chmod 777 build.sh
-            ./build.sh 
-            ls -lrtha
-            cd tests
-            chmod 777 selenium_driver_code.py
-            python selenium_driver_code.py
-            ls -la
-      - run:
-          name: Store Test Results
-          command: |
-            pwd
-            ls -la
-            mkdir test-results   
-            ls -la         
-            cp -r tests/test_results.xml test-results/
+            python -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+            mkdir test-results
+            pytest --junitxml=test-results/junit.xml tests/
+            if [ $? -ne 0 ]; then
+              echo "Tests failed. Initiating rollback."
+              echo "rollback" > ~/test_status.txt
+            else
+              echo "Tests passed."
+              echo "pass" > ~/test_status.txt
+            fi
       - store_test_results:
           path: test-results
-      - run:
-          name: Check Test Results
-          command: |
-            if grep -q "FAILED" test-results/*.xml; then
-              echo "Tests failed, triggering rollback"
-              exit 1
-            else
-              echo "Tests passed"
-            fi
-
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - test_status.txt
   rollback:
     working_directory: ~/Flask-calculator
     docker:
       - image: cimg/azure:2023.09
     steps:
+      - attach_workspace:
+          at: ~/
       - run:
-          name: Rollback to Previous Stable Build
+          name: Check Test Status and Rollback if Necessary
           command: |
-            az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-            az account set --subscription $AZURE_SUBSCRIPTION_ID
-            az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src previous-stable.zip
-
-  rollback_timeout:
-    working_directory: ~/Flask-calculator
-    docker:
-      - image: cimg/python:3.9.9
-    steps:
-      - run:
-          name: Timeout Check for Rollback
-          command: |
-            sleep 60  # Wait for 1 minutes
-            echo "No approval received for rollback. Proceeding to the next step."
-
+            if [[ $(cat ~/test_status.txt) == "rollback" ]]; then
+              echo "Tests failed. Performing rollback..."
+              az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+              az account set --subscription $AZURE_SUBSCRIPTION_ID
+              az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src previous-stable.zip
+            else
+              echo "Tests passed. Skipping rollback."
+            fi
 workflows:
   build_and_test_deploy:
     jobs:
@@ -164,13 +143,6 @@ workflows:
       - rollback:
           requires:
             - run_tests
-          filters:
-            branches:
-              only: stage
-          type: approval
-      - rollback_timeout:
-          requires:
-            - rollback
           filters:
             branches:
               only: stage

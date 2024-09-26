@@ -102,12 +102,17 @@ jobs:
             cd tests
             chmod 777 selenium_driver_code.py
             python selenium_driver_code.py
+            ls -la
       - run:
           name: Store Test Results
           command: |
             pwd
+            cd tests
             ls -la
-            mkdir -p test-results
+            mkdir test-results
+            ls -la
+            cd ..
+            mkdir test-results            
             cp -r tests/test-results/* test-results/
       - store_test_results:
           path: test-results

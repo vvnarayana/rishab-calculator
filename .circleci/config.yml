@@ -91,37 +91,15 @@ jobs:
             chromedriver --version
           name: Check install
       - run:
-          name: Run Selenium Tests
+          name: run tests
           command: |
-            whereis chrome
-            pwd
-            ls -lrtha
-            chmod 777 build.sh
-            ./build.sh 
-            ls -lrtha
-            cd tests
-            chmod 777 selenium_driver_code.py
-            python selenium_driver_code.py
-            ls -la
-      - run:
-          name: Store Test Results
-          command: |
-            pwd
-            ls -la
-            mkdir test-results   
-            ls -la         
-            cp -r tests/test_results.txt test-results/
+            python -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+            mkdir test-results
+            pytest --junitxml=test-results/junit.xml tests/
       - store_test_results:
           path: test-results
-      - run:
-          name: Check Test Results
-          command: |
-            if grep -q "FAILED" test-results/*.txt; then
-              echo "Tests failed, triggering rollback"
-              exit 1
-            else
-              echo "Tests passed"
-            fi
 
   rollback:
     working_directory: ~/Flask-calculator

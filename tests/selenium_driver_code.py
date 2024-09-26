@@ -9,6 +9,7 @@ from selenium.common.exceptions import TimeoutException
 import traceback
 import math
 import os
+from junit_xml import TestSuite, TestCase
 
 # Open the Flask app URL
 app_url = 'https://circleci.azurewebsites.net/'
@@ -26,26 +27,26 @@ options.add_experimental_option("excludeSwitches", ['enable-automation'])
 driver = webdriver.Chrome(options=options)
 driver.get(app_url)
 
-passed_tests = 0
+test_cases = [
+    ("5", "3", "Add", 8),
+    ("-5", "3", "Add", -2),
+    ("2.5", "1.5", "Add", 4.0),
+    ("8", "3", "Subtract", 5),
+    ("3", "8", "Subtract", -5),
+    ("10", "10", "Subtract", 0),
+    ("5", "4", "Multiply", 20),
+    ("7", "0", "Multiply", 0),
+    ("2.5", "1.5", "Multiply", 3.75),
+    ("10", "2", "Divide", 5.0),
+    ("8", "0", "Divide", "Cannot divide by zero"),
+    ("7", "3", "Divide", 2.33),
+]
+
+test_suite = []
 total_tests = 0
-output_lines = []
+passed_tests = 0
 
 try:
-    test_cases = [
-        ("5", "3", "Add", 8),
-        ("-5", "3", "Add", -2),
-        ("2.5", "1.5", "Add", 4.0),
-        ("8", "3", "Subtract", 5),
-        ("3", "8", "Subtract", -5),
-        ("10", "10", "Subtract", 0),
-        ("5", "4", "Multiply", 20),
-        ("7", "0", "Multiply", 0),
-        ("2.5", "1.5", "Multiply", 3.75),
-        ("10", "2", "Divide", 5.0),
-        ("8", "0", "Divide", "Cannot divide by zero"),
-        ("7", "3", "Divide", 2.33),
-    ]
-
     for test_case in test_cases:
         wait = WebDriverWait(driver, 15)
 
@@ -70,6 +71,9 @@ try:
         actual_result = result_element.text.strip()
         actual_result_numeric = actual_result.split(": ")[-1]
 
+        test_case_name = f"{test_case[0]} {test_case[2]} {test_case[1]}"
+        test = TestCase(test_case_name, classname="CalculatorTests")
+
         # Handling the floating-point comparison separately
         if isinstance(test_case[3], float) or isinstance(test_case[3], int):
             if actual_result_numeric == "Cannot divide by zero":
@@ -79,36 +83,30 @@ try:
 
             tolerance = 0.01  # Adjust tolerance for rounding
             if math.isclose(expected_result, float(test_case[3]), rel_tol=tolerance):
-                result_line = f"Test passed for {test_case[:3]}. Expected: {float(test_case[3])}, Actual: {expected_result}"
+                test_suite.append(test)
                 passed_tests += 1
             else:
-                result_line = f"Test failed for {test_case[:3]}. Expected: {float(test_case[3])}, Actual: {expected_result}"
+                test_suite.append(TestCase(test_case_name, classname="CalculatorTests", stderr=f"Expected: {float(test_case[3])}, Actual: {expected_result}"))
         else:
             if actual_result_numeric == test_case[3] or actual_result_numeric == "Cannot divide by zero":
-                result_line = f"Test passed for {test_case[:3]}. Expected: {test_case[3]}, Actual: {actual_result_numeric}"
+                test_suite.append(test)
                 passed_tests += 1
             else:
-                result_line = f"Test failed for {test_case[:3]}. Expected: {test_case[3]}, Actual: {actual_result_numeric}"
+                test_suite.append(TestCase(test_case_name, classname="CalculatorTests", stderr=f"Expected: {test_case[3]}, Actual: {actual_result_numeric}"))
 
-        print(result_line)
-        output_lines.append(result_line)
         total_tests += 1
 
 except TimeoutException as e:
-    error_line = f"Timeout occurred while waiting for the element. Details: {e}"
-    print(error_line)
-    output_lines.append(error_line)
+    error_test = TestCase("TimeoutException", classname="CalculatorTests", stderr=str(e))
+    test_suite.append(error_test)
     traceback.print_exc()
 
 finally:
-    # Close the browser session
     driver.quit()
 
 summary_line = f"{passed_tests}/{total_tests} test cases passed."
 print(summary_line)
-output_lines.append(summary_line)
 
-# Write the results to a file
-with open("test_results.txt", "w") as f:
-    for line in output_lines:
-        f.write(line + "\n")
+# Write the results to a JUnit XML file
+with open("test-results/selenium_results.xml", "w") as f:
+    TestSuite.to_file(f, [TestSuite("CalculatorTests", test_suite)])

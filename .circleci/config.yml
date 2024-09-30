@@ -86,6 +86,11 @@ jobs:
             chromedriver --version
           name: Check install
       - run:
+          name: List directory contents
+          command: |
+            pwd
+            ls -la
+      - run:
           name: Run Unit Tests and Selenium Tests
           command: |
             python -m venv venv
@@ -104,6 +109,7 @@ jobs:
             if [ $? -ne 0 ] || [ ! -f test-results/selenium/selenium_results.xml ] || grep -q "failures=" test-results/selenium/selenium_results.xml; then
               echo "Tests failed. Initiating rollback."
               echo "rollback" > ~/test_status.txt
+              exit 1
             else
               echo "All tests passed."
               echo "pass" > ~/test_status.txt

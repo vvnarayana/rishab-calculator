@@ -97,6 +97,7 @@ jobs:
           command: |
             python -m venv venv
             . venv/bin/activate
+            pip install --upgrade pip
             pip install -r requirements.txt
             mkdir -p test-results/pytest
             mkdir -p test-results/selenium

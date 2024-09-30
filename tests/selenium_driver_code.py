@@ -87,6 +87,7 @@ try:
                 test_suite.append(test)
                 passed_tests += 1
             else:
+                print(f"Test failed: {test_case_name}, Expected: {float(test_case[3])}, Actual: {expected_result}")
                 test.add_failure_info(f"Expected: {float(test_case[3])}, Actual: {expected_result}")
                 test_suite.append(test)
         else:
@@ -94,6 +95,7 @@ try:
                 test_suite.append(test)
                 passed_tests += 1
             else:
+                print(f"Test failed: {test_case_name}, Expected: {test_case[3]}, Actual: {actual_result_numeric}")
                 test.add_failure_info(f"Expected: {test_case[3]}, Actual: {actual_result_numeric}")
                 test_suite.append(test)
 

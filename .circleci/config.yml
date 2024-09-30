@@ -7,6 +7,7 @@ orbs:
   python: circleci/python@2.1.1
   aws-cli: circleci/aws-cli@2.0.3
   browser-tools: circleci/browser-tools@1.4.8
+
 jobs:
   builds:
     working_directory: ~/Flask-calculator
@@ -40,6 +41,7 @@ jobs:
             chmod 777 artifact.sh
             ls -la
             ./artifact.sh
+
   deploy:
     working_directory: ~/Flask-calculator
     docker:
@@ -123,6 +125,7 @@ jobs:
           root: ~/
           paths:
             - test_status.txt
+
   rollback:
     working_directory: ~/Flask-calculator
     docker:
@@ -141,6 +144,7 @@ jobs:
             else
               echo "Tests passed. Skipping rollback."
             fi
+
 workflows:
   build_and_test_deploy:
     jobs:

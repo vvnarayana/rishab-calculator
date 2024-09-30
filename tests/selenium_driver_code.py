@@ -87,18 +87,21 @@ try:
                 test_suite.append(test)
                 passed_tests += 1
             else:
-                test_suite.append(TestCase(test_case_name, classname="CalculatorTests", stderr=f"Expected: {float(test_case[3])}, Actual: {expected_result}"))
+                test.add_failure_info(f"Expected: {float(test_case[3])}, Actual: {expected_result}")
+                test_suite.append(test)
         else:
             if actual_result_numeric == test_case[3] or actual_result_numeric == "Cannot divide by zero":
                 test_suite.append(test)
                 passed_tests += 1
             else:
-                test_suite.append(TestCase(test_case_name, classname="CalculatorTests", stderr=f"Expected: {test_case[3]}, Actual: {actual_result_numeric}"))
+                test.add_failure_info(f"Expected: {test_case[3]}, Actual: {actual_result_numeric}")
+                test_suite.append(test)
 
         total_tests += 1
 
 except TimeoutException as e:
-    error_test = TestCase("TimeoutException", classname="CalculatorTests", stderr=str(e))
+    error_test = TestCase("TimeoutException", classname="CalculatorTests")
+    error_test.add_error_info(str(e))
     test_suite.append(error_test)
     traceback.print_exc()
 
@@ -108,6 +111,13 @@ finally:
 summary_line = f"{passed_tests}/{total_tests} test cases passed."
 print(summary_line)
 
+# Ensure the directory exists
+os.makedirs("test-results/selenium", exist_ok=True)
+
 # Write the results to a JUnit XML file
-with open("test-results/selenium_results.xml", "w") as f:
+with open("test-results/selenium/selenium_results.xml", "w") as f:
     TestSuite.to_file(f, [TestSuite("CalculatorTests", test_suite)])
+
+# Exit with non-zero status if any tests failed
+if passed_tests < total_tests:
+    exit(1)

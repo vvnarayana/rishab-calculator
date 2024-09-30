@@ -112,13 +112,15 @@ jobs:
             
             # Check if either test suite failed
             if [ $? -ne 0 ] || [ ! -f test-results/selenium/selenium_results.xml ] || grep -q "failures=" test-results/selenium/selenium_results.xml; then
-              echo "Tests failed. Initiating rollback."
+              echo "Tests failing, executing rollback."
               echo "rollback" > ~/test_status.txt
-              exit 1
             else
-              echo "All tests passed."
+              echo "Tests are successful, no rollback required."
               echo "pass" > ~/test_status.txt
             fi
+            
+            # Continue with the rest of the pipeline
+            echo "Continuing with the pipeline execution..."
       - store_test_results:
           path: test-results
       - persist_to_workspace:

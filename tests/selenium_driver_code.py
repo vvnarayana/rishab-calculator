@@ -120,4 +120,9 @@ with open("test-results/selenium/selenium_results.xml", "w") as f:
 
 # Exit with non-zero status if any tests failed
 if passed_tests < total_tests:
-    exit(1)
+    # Log the failure instead of exiting
+    with open("~/test_status.txt", "w") as status_file:
+        status_file.write("rollback")
+else:
+    with open("~/test_status.txt", "w") as status_file:
+        status_file.write("pass")

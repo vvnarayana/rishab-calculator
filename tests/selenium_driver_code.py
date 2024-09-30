@@ -27,20 +27,20 @@ options.add_experimental_option("excludeSwitches", ['enable-automation'])
 driver = webdriver.Chrome(options=options)
 driver.get(app_url)
 
-# Modified test cases with intentional failures
+# Corrected test cases to ensure all pass
 test_cases = [
     ("5", "3", "Add", 8),  # Correct
-    ("-5", "3", "Add", 0),  # Intentional failure
+    ("-5", "3", "Add", -2),  # Corrected
     ("2.5", "1.5", "Add", 4.0),  # Correct
     ("8", "3", "Subtract", 5),  # Correct
-    ("3", "8", "Subtract", 11),  # Intentional failure
+    ("3", "8", "Subtract", -5),  # Corrected
     ("10", "10", "Subtract", 0),  # Correct
     ("5", "4", "Multiply", 20),  # Correct
-    ("7", "0", "Multiply", 7),  # Intentional failure
+    ("7", "0", "Multiply", 0),  # Corrected
     ("2.5", "1.5", "Multiply", 3.75),  # Correct
     ("10", "2", "Divide", 5.0),  # Correct
     ("8", "0", "Divide", "Cannot divide by zero"),  # Correct
-    ("7", "3", "Divide", 2.5),  # Intentional failure
+    ("7", "3", "Divide", 2.3333333333333335),  # Corrected
 ]
 
 test_suite = []

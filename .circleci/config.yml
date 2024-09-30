@@ -103,15 +103,15 @@ jobs:
             
             # Run pytest unit tests
             pytest --junitxml=test-results/pytest/junit.xml tests/
-            pytest_exit_code=$?  # Capture exit code for pytest
             
             # Run Selenium tests
+            pwd
+            ls -la
             cd /home/circleci/Flask-calculator/tests
             python selenium_driver_code.py
-            selenium_exit_code=$?  # Capture exit code for Selenium tests
             
             # Check if either test suite failed
-            if [ $pytest_exit_code -ne 0 ] || [ $selenium_exit_code -ne 0 ]; then
+            if [ $? -ne 0 ] || [ ! -f test-results/selenium/selenium_results.xml ] || grep -q "failures=" test-results/selenium/selenium_results.xml; then
               echo "Tests failing, executing rollback."
               echo "rollback" > ~/test_status.txt
             else
@@ -119,10 +119,8 @@ jobs:
               echo "pass" > ~/test_status.txt
             fi
             
-            # Continue the job without exiting with a non-zero status
+            # Continue with the rest of the pipeline
             echo "Continuing with the pipeline execution..."
-            exit 0  # Ensure exit code is 0 to not fail the job
-
       - store_test_results:
           path: test-results
       - persist_to_workspace:

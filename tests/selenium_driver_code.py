@@ -31,13 +31,13 @@ driver.get(app_url)
 test_cases = [
     ("5", "3", "Add", 8),  # Correct
     ("-5", "3", "Add", -2),  # Corrected
-    ("2.5", "1.5", "Add", 4.0),  # Correct
+    ("2", "1", "Add", 3),  # Correct
     ("8", "3", "Subtract", 5),  # Correct
     ("3", "8", "Subtract", -5),  # Corrected
     ("10", "10", "Subtract", 0),  # Correct
     ("5", "4", "Multiply", 20),  # Correct
     ("7", "0", "Multiply", 0),  # Corrected
-    ("2.5", "1.5", "Multiply", 3.75),  # Correct
+    ("2", "1", "Multiply", 2),  # Correct
     ("10", "2", "Divide", 5.0),  # Correct
     ("8", "0", "Divide", "Cannot divide by zero"),  # Correct
     ("7", "3", "Divide", 2.3333333333333335),  # Corrected

@@ -106,7 +106,7 @@ jobs:
             pwd
             ls -la
             cd /home/circleci/Flask-calculator/tests
-            python selenium_tests.py
+            python selenium_driver_code
             
             # Check if either test suite failed
             if [ $? -ne 0 ] || [ ! -f test-results/selenium/selenium_results.xml ] || grep -q "failures=" test-results/selenium/selenium_results.xml; then

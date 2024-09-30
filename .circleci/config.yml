@@ -111,8 +111,15 @@ jobs:
             cd /home/circleci/Flask-calculator/tests
             python selenium_driver_code.py
             
+            # Verify Selenium results file was created
+            if [ ! -f test-results/selenium/selenium_results.xml ]; then
+              echo "Selenium results file not found. This may indicate a problem with the test execution."
+              echo "rollback" > ~/test_status.txt
+              exit 1
+            fi
+            
             # Check if either test suite failed
-            if [ $? -ne 0 ] || [ ! -f test-results/selenium/selenium_results.xml ] || grep -q "failures=" test-results/selenium/selenium_results.xml; then
+            if [ $? -ne 0 ] || grep -q "failures=\"[1-9][0-9]*\"" test-results/selenium/selenium_results.xml; then
               echo "Tests failing, executing rollback."
               echo "rollback" > ~/test_status.txt
             else

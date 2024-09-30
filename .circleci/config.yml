@@ -72,8 +72,7 @@ jobs:
   run_tests:
     working_directory: ~/Flask-calculator
     docker:
-      - image: "cimg/python:3.9.9"
-      - image: cimg/node:20.4.0-browsers
+      - image: "cimg/python:3.9.9-browsers"
     steps: 
       - checkout 
       - python/install-packages: 
@@ -87,18 +86,26 @@ jobs:
             chromedriver --version
           name: Check install
       - run:
-          name: run tests
+          name: Run Unit Tests and Selenium Tests
           command: |
             python -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
-            mkdir test-results
-            pytest --junitxml=test-results/junit.xml tests/
-            if [ $? -ne 0 ]; then
+            mkdir -p test-results/pytest
+            mkdir -p test-results/selenium
+            
+            # Run pytest unit tests
+            pytest --junitxml=test-results/pytest/junit.xml tests/
+            
+            # Run Selenium tests
+            python selenium_tests.py
+            
+            # Check if either test suite failed
+            if [ $? -ne 0 ] || [ ! -f test-results/selenium/selenium_results.xml ] || grep -q "failures=" test-results/selenium/selenium_results.xml; then
               echo "Tests failed. Initiating rollback."
               echo "rollback" > ~/test_status.txt
             else
-              echo "Tests passed."
+              echo "All tests passed."
               echo "pass" > ~/test_status.txt
             fi
       - store_test_results:

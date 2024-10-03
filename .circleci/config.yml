@@ -42,8 +42,8 @@ jobs:
             ls -la
             ./artifact.sh
       - store_artifacts:
-          path: ~/Flask-calculator
-          destination: flask-calculator-artifacts
+          path: ~/Flask-calculator/Flask-calculator.zip
+          destination: Flask-calculator.zip
 
   deploy:
     working_directory: ~/Flask-calculator

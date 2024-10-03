@@ -41,6 +41,9 @@ jobs:
             chmod 777 artifact.sh
             ls -la
             ./artifact.sh
+      - store_artifacts:
+          path: ~/Flask-calculator
+          destination: flask-calculator-artifacts
 
   deploy:
     working_directory: ~/Flask-calculator

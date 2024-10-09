@@ -155,7 +155,7 @@ jobs:
               az account set --subscription $AZURE_SUBSCRIPTION_ID
               az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src previous-stable.zip
             else
-              echo "Tests passed. Skipping rollback."
+              echo "Tests passed. Skipping rollback Process."
             fi
 
 workflows:

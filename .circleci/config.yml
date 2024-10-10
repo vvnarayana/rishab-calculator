@@ -90,7 +90,6 @@ jobs:
           deployment_url: https://$AZURE_WEBAPP_NAME.azurewebsites.net
           additional_details: |
             {
-              "Workflow URL": "<< pipeline.url >>",
               "Branch": "<< pipeline.git.branch >>",
               "Commit": "<< pipeline.git.revision >>"
             }

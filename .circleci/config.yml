@@ -183,14 +183,8 @@ workflows:
       - run_tests:
           requires:
             - deploy
-          filters:
-            branches:
-              only: stage
           context: Jira    
       - rollback:
           requires:
             - run_tests
-          filters:
-            branches:
-              only: stage
           context: Jira

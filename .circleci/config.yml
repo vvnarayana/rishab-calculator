@@ -8,6 +8,7 @@ orbs:
   aws-cli: circleci/aws-cli@2.0.3
   browser-tools: circleci/browser-tools@1.4.8
   jira: circleci/jira@2.1.0
+  compass: atlassian-labs/compass@0.1.3
 
 jobs:
   builds:
@@ -83,6 +84,8 @@ jobs:
           environment: ${CIRCLE_JOB}
           pipeline_id: << pipeline.id >>
           pipeline_number: << pipeline.number >>
+      - compass/notify_deployment:
+          environment_type: staging
         
   run_tests:
     working_directory: ~/Flask-calculator
@@ -178,16 +181,27 @@ workflows:
   build_and_test_deploy:
     jobs:
       - builds:
-          context: Jira           
+          context: 
+            - Jira
+            - compass-integration-venkatap
       - deploy:
           requires:
             - builds
-          context: Jira
+          context: 
+            - Jira
+            - compass-integration-venkatap
+          post-steps:
+            - compass/notify_deployment:
+                environment_type: staging
       - run_tests:
           requires:
             - deploy
-          context: Jira    
+          context: 
+            - Jira
+            - compass-integration-venkatap
       - rollback:
           requires:
             - run_tests
-          context: Jira
+          context: 
+            - Jira
+            - compass-integration-venkatap

@@ -78,8 +78,22 @@ jobs:
             az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
             az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
       - jira/notify:
-          pipeline_id: <<pipeline.id>>
-          pipeline_number: <<pipeline.number>>
+          job_type: deployment
+          environment_type: staging
+          environment: Azure App Service
+          environment_id: $AZURE_WEBAPP_NAME
+          state: successful
+          pipeline_id: << pipeline.id >>
+          pipeline_display_name: $CIRCLE_PROJECT_REPONAME
+          pipeline_number: << pipeline.number >>
+          branch_name: << pipeline.git.branch >>
+          deployment_url: https://$AZURE_WEBAPP_NAME.azurewebsites.net
+          additional_details: |
+            {
+              "Workflow URL": "<< pipeline.url >>",
+              "Branch": "<< pipeline.git.branch >>",
+              "Commit": "<< pipeline.git.revision >>"
+            }
 
   run_tests:
     working_directory: ~/Flask-calculator
@@ -183,8 +197,14 @@ workflows:
       - run_tests:
           requires:
             - deploy
+          filters:
+            branches:
+              only: stage
           context: Jira    
       - rollback:
           requires:
             - run_tests
+          filters:
+            branches:
+              only: stage
           context: Jira

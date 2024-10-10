@@ -31,11 +31,6 @@ jobs:
       - run: 
           name: Python Version
           command: python3 --version
-      - run: 
-          name: Test
-          command: |
-            cd /home/circleci
-            ls -lrth
       - run:
           name: Artifact Archiving
           command: |
@@ -80,12 +75,12 @@ jobs:
             az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
       - jira/notify:
           job_type: deployment
-          environment_type: staging
+          environment_type: production
           environment: ${CIRCLE_JOB}
           pipeline_id: << pipeline.id >>
           pipeline_number: << pipeline.number >>
       - compass/notify_deployment:
-          environment_type: staging
+          environment_type: production
         
   run_tests:
     working_directory: ~/Flask-calculator
@@ -192,7 +187,7 @@ workflows:
             - compass-integration-venkatap
           post-steps:
             - compass/notify_deployment:
-                environment_type: staging
+                environment_type: production
       - run_tests:
           requires:
             - deploy

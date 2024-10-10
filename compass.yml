@@ -1,0 +1,34 @@
+name: Python-Calculator
+id: 'ari:cloud:compass:ac7091c4-3833-4eeb-9cf4-be4d7da3aa4d:component/2e72bbb7-6db7-45cb-a063-3a920899eac8/852be30d-628b-4101-93cb-a466d546f38e'
+description: 'Demo of Compass Integrations with Jira , Github , and CircleCi'
+configVersion: 1
+typeId: SERVICE
+ownerId: 'ari:cloud:identity::team/7ff785a3-d265-47d0-9c78-c3d1887cf147'
+fields:
+  lifecycle: Active
+  tier: 1
+links:
+  - name: ''
+    type: PROJECT
+    url: 'https://venkatap.atlassian.net/browse/CC'
+  - name: ''
+    type: REPOSITORY
+    url: 'https://github.com/vvnarayana/rishab-calculator.git'
+  - name: Circle-CI
+    type: DASHBOARD
+    url: 'https://app.circleci.com/jobs/github/vvnarayana/rishab-calculator'
+  - name: Devops and Demo
+    type: CHAT_CHANNEL
+    url: >-
+      https://teams.microsoft.com/l/team/19%3AyMhZLvWSkHsXtyErM962xwVnquJpYouM9znUvw011Jo1%40thread.tacv2/conversations?groupId=742f40d1-212f-42d8-aaed-ad5e7198fa10&tenantId=8c28e02d-a1ef-41a0-b06c-9efa7f1c748d
+relationships: {}
+labels:
+  - azure
+  - circle-ci
+  - github
+  - python
+  - synced-with-jsm
+customFields: null
+
+# Learn more about formatting compass.yml:
+# https://go.atlassian.com/compass-yml-format

@@ -80,9 +80,7 @@ jobs:
       - jira/notify:
           job_type: deployment
           environment_type: staging
-          environment: Azure App Service
-          environment_id: $AZURE_WEBAPP_NAME
-          state: successful
+          environment: ${CIRCLE_JOB}
           pipeline_id: << pipeline.id >>
           pipeline_number: << pipeline.number >>
         

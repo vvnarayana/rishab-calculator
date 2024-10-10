@@ -7,6 +7,7 @@ orbs:
   python: circleci/python@2.1.1
   aws-cli: circleci/aws-cli@2.0.3
   browser-tools: circleci/browser-tools@1.4.8
+  jira: circleci/jira@2.1.0
 
 jobs:
   builds:
@@ -44,6 +45,9 @@ jobs:
       - store_artifacts:
           path: ~/Flask-calculator/Flask-calculator.zip
           destination: Flask-calculator.zip
+      - jira/notify:
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
 
   deploy:
     working_directory: ~/Flask-calculator
@@ -73,7 +77,13 @@ jobs:
             az account set --subscription $AZURE_SUBSCRIPTION_ID
             az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
             az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
-  
+      - jira/notify:
+          job_type: deployment
+          environment_type: staging
+          environment: ${CIRCLE_JOB}
+          pipeline_id: << pipeline.id >>
+          pipeline_number: << pipeline.number >>
+        
   run_tests:
     working_directory: ~/Flask-calculator
     docker:
@@ -138,6 +148,9 @@ jobs:
           root: ~/
           paths:
             - test_status.txt
+      - jira/notify:
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
 
   rollback:
     working_directory: ~/Flask-calculator
@@ -155,8 +168,11 @@ jobs:
               az account set --subscription $AZURE_SUBSCRIPTION_ID
               az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src previous-stable.zip
             else
-              echo "Tests passed. Skipping rollback."
+              echo "Tests passed. Skipping rollback Process."
             fi
+      - jira/notify:
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
 
 workflows:
   build_and_test_deploy:
@@ -170,12 +186,8 @@ workflows:
       - run_tests:
           requires:
             - deploy
-          filters:
-            branches:
-              only: stage
+          context: Jira    
       - rollback:
           requires:
             - run_tests
-          filters:
-            branches:
-              only: stage
+          context: Jira

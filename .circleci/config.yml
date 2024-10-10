@@ -4,9 +4,12 @@ executors:
     docker:
       - image: cimg/python:3.9.9
 orbs:
-    python: circleci/python@2.1.1
-    aws-cli: circleci/aws-cli@2.0.3
-    browser-tools: circleci/browser-tools@1.4.8
+  python: circleci/python@2.1.1
+  aws-cli: circleci/aws-cli@2.0.3
+  browser-tools: circleci/browser-tools@1.4.8
+  jira: circleci/jira@2.1.0
+  compass: atlassian-labs/compass@0.1.3
+
 jobs:
   builds:
     working_directory: ~/Flask-calculator
@@ -40,6 +43,13 @@ jobs:
             chmod 777 artifact.sh
             ls -la
             ./artifact.sh
+      - store_artifacts:
+          path: ~/Flask-calculator/Flask-calculator.zip
+          destination: Flask-calculator.zip
+      - jira/notify:
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
+
   deploy:
     working_directory: ~/Flask-calculator
     docker:
@@ -68,12 +78,19 @@ jobs:
             az account set --subscription $AZURE_SUBSCRIPTION_ID
             az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
             az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
-  
+      - jira/notify:
+          job_type: deployment
+          environment_type: staging
+          environment: ${CIRCLE_JOB}
+          pipeline_id: << pipeline.id >>
+          pipeline_number: << pipeline.number >>
+      - compass/notify_deployment:
+          environment_type: staging
+        
   run_tests:
     working_directory: ~/Flask-calculator
     docker:
-      - image: "cimg/python:3.9.9"
-      - image: cimg/node:20.4.0-browsers
+      - image: "cimg/python:3.9.9-browsers"
     steps: 
       - checkout 
       - python/install-packages: 
@@ -87,26 +104,105 @@ jobs:
             chromedriver --version
           name: Check install
       - run:
-          name: Run Selenium Tests
+          name: List directory contents
           command: |
-            whereis chrome
             pwd
-            ls -lrtha
-            chmod 777 build.sh
-            ./build.sh 
-            ls -lrtha
-            cd tests
-            chmod 777 selenium_driver_code.py
+            ls -la
+      - run:
+          name: Run Unit Tests and Selenium Tests
+          command: |
+            python -m venv venv
+            . venv/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt
+            mkdir -p test-results/pytest
+            mkdir -p test-results/selenium
+            
+            # Run pytest unit tests
+            pytest --junitxml=test-results/pytest/junit.xml tests/
+            
+            # Run Selenium tests
+            pwd
+            ls -la
+            cd /home/circleci/Flask-calculator/tests
             python selenium_driver_code.py
+            
+            # Verify Selenium results file was created
+            if [ ! -f test-results/selenium/selenium_results.xml ]; then
+              echo "Selenium results file not found. This may indicate a problem with the test execution."
+              echo "rollback" > ~/test_status.txt
+              exit 1
+            fi
+            
+            # Check if either test suite failed
+            if [ $? -ne 0 ] || grep -q "failures=\"[1-9][0-9]*\"" test-results/selenium/selenium_results.xml; then
+              echo "Tests failing, executing rollback."
+              echo "rollback" > ~/test_status.txt
+            else
+              echo "Tests are successful, no rollback required."
+              echo "pass" > ~/test_status.txt
+            fi
+            
+            # Continue with the rest of the pipeline
+            echo "Continuing with the pipeline execution..."
+      - store_test_results:
+          path: test-results
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - test_status.txt
+      - jira/notify:
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
+
+  rollback:
+    working_directory: ~/Flask-calculator
+    docker:
+      - image: cimg/azure:2023.09
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Check Test Status and Rollback if Necessary
+          command: |
+            if [[ $(cat ~/test_status.txt) == "rollback" ]]; then
+              echo "Tests failed. Performing rollback..."
+              az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+              az account set --subscription $AZURE_SUBSCRIPTION_ID
+              az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src previous-stable.zip
+            else
+              echo "Tests passed. Skipping rollback Process."
+            fi
+      - jira/notify:
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
+
 workflows:
   build_and_test_deploy:
     jobs:
       - builds:
-          context: Jira           
+          context: 
+            - Jira
+            - compass-integration-venkatap
       - deploy:
           requires:
             - builds
-          context: Jira
+          context: 
+            - Jira
+            - compass-integration-venkatap
+          post-steps:
+            - compass/notify_deployment:
+                environment_type: staging
       - run_tests:
           requires:
             - deploy
+          context: 
+            - Jira
+            - compass-integration-venkatap
+      - rollback:
+          requires:
+            - run_tests
+          context: 
+            - Jira
+            - compass-integration-venkatap
+            

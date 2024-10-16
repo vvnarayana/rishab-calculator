@@ -9,6 +9,7 @@ orbs:
   browser-tools: circleci/browser-tools@1.4.8
   jira: circleci/jira@2.1.0
   compass: atlassian-labs/compass@0.1.3
+  ms-teams-orb: opub/ms-teams-orb@1.0.3
 
 jobs:
   builds:
@@ -44,6 +45,10 @@ jobs:
       - jira/notify:
           pipeline_id: <<pipeline.id>>
           pipeline_number: <<pipeline.number>>
+      - run: Report to teams
+      - ms-teams-orb/report:
+          only_on_fail: false
+          webhook_url: $TEAMS_WEBHOOK_URL
 
   deploy:
     working_directory: ~/Flask-calculator
@@ -81,7 +86,11 @@ jobs:
           pipeline_number: << pipeline.number >>
       - compass/notify_deployment:
           environment_type: production
-        
+      - run: Report to teams
+      - ms-teams-orb/report:
+          only_on_fail: false
+          webhook_url: $TEAMS_WEBHOOK_URL
+
   run_tests:
     working_directory: ~/Flask-calculator
     docker:
@@ -149,6 +158,11 @@ jobs:
       - jira/notify:
           pipeline_id: <<pipeline.id>>
           pipeline_number: <<pipeline.number>>
+      - run: Report to teams
+      - ms-teams-orb/report:
+          only_on_fail: false
+          webhook_url: $TEAMS_WEBHOOK_URL
+    
 
   rollback:
     working_directory: ~/Flask-calculator
@@ -157,20 +171,35 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/
+      - aws-cli/setup
       - run:
           name: Check Test Status and Rollback if Necessary
           command: |
             if [[ $(cat ~/test_status.txt) == "rollback" ]]; then
               echo "Tests failed. Performing rollback..."
+              
+              # Download stable build from S3
+              aws s3 cp s3://${S3_BUCKET_NAME}/Flask-calculator.zip ./stable-build.zip
+              
+              # Deploy stable build to Azure
               az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
               az account set --subscription $AZURE_SUBSCRIPTION_ID
-              az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src previous-stable.zip
+              az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src stable-build.zip
+              
+              echo "Rollback completed."
             else
-              echo "Tests passed. Skipping rollback Process."
+              echo "Tests passed. Skipping rollback process."
             fi
       - jira/notify:
           pipeline_id: <<pipeline.id>>
           pipeline_number: <<pipeline.number>>
+      - compass/notify_deployment:
+          environment_type: production
+      - run: Report to teams
+      - ms-teams-orb/report:
+          only_on_fail: false
+          webhook_url: $TEAMS_WEBHOOK_URL
+
 
 workflows:
   build_and_test_deploy:
@@ -179,12 +208,16 @@ workflows:
           context: 
             - Jira
             - compass-integration-venkatap
+            - aws-credentials
+            - teams
       - deploy:
           requires:
             - builds
           context: 
             - Jira
             - compass-integration-venkatap
+            - aws-credentials
+            - teams
           post-steps:
             - compass/notify_deployment:
                 environment_type: production
@@ -194,10 +227,14 @@ workflows:
           context: 
             - Jira
             - compass-integration-venkatap
+            - aws-credentials
+            - teams
       - rollback:
           requires:
             - run_tests
           context: 
             - Jira
             - compass-integration-venkatap
+            - aws-credentials
+            - teams
             

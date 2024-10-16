@@ -20,12 +20,15 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: pip install -r requirements.txt
+          command: |
+            pip install -r requirements.txt
+          no_output_timeout: 10m
       - run:
           name: Build Script
           command: |
             chmod 777 build.sh
             ./build.sh
+          no_output_timeout: 15m
       - run:
           name: Artifact Archiving
           command: |
@@ -35,9 +38,9 @@ jobs:
           path: ~/Flask-calculator/Flask-calculator.zip
           destination: Flask-calculator.zip
       - ms-teams/report:
-          only_on_fail: true
+          only_on_fail: false
           webhook_url: $TEAMS_WEBHOOK_URL
-          message: "Build step failed"
+          message: "Build step completed. Status: ${CIRCLE_JOB}"
 
   deploy:
     docker:
@@ -54,10 +57,11 @@ jobs:
             az account set --subscription $AZURE_SUBSCRIPTION_ID
             az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
             az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
+          no_output_timeout: 20m
       - ms-teams/report:
-          only_on_fail: true
+          only_on_fail: false
           webhook_url: $TEAMS_WEBHOOK_URL
-          message: "Deploy step failed"
+          message: "Deploy step completed. Status: ${CIRCLE_JOB}"
 
   run_tests:
     docker:
@@ -79,22 +83,22 @@ jobs:
             mkdir -p test-results/pytest
             mkdir -p test-results/selenium
             
-            pytest --junitxml=test-results/pytest/junit.xml tests/
+            pytest --junitxml=test-results/pytest/junit.xml tests/ || echo "Unit tests failed"
             
             cd /home/circleci/Flask-calculator/tests
-            python selenium_driver_code.py
+            python selenium_driver_code.py || echo "Selenium tests failed"
             
             if [ ! -f test-results/selenium/selenium_results.xml ]; then
               echo "Selenium results file not found. This may indicate a problem with the test execution."
               echo "rollback" > ~/test_status.txt
-              exit 1
-            fi
-            
-            if [ $? -ne 0 ] || grep -q "failures=\"[1-9][0-9]*\"" test-results/selenium/selenium_results.xml; then
+            elif grep -q "failures=\"[1-9][0-9]*\"" test-results/selenium/selenium_results.xml || grep -q "failures=\"[1-9][0-9]*\"" test-results/pytest/junit.xml; then
+              echo "Tests failed. Marking for rollback."
               echo "rollback" > ~/test_status.txt
             else
+              echo "All tests passed."
               echo "pass" > ~/test_status.txt
             fi
+          no_output_timeout: 30m
       - store_test_results:
           path: test-results
       - persist_to_workspace:
@@ -102,9 +106,9 @@ jobs:
           paths:
             - test_status.txt
       - ms-teams/report:
-          only_on_fail: true
+          only_on_fail: false
           webhook_url: $TEAMS_WEBHOOK_URL
-          message: "Test step failed"
+          message: "Test step completed. Status: ${CIRCLE_JOB}"
 
   rollback:
     docker:
@@ -119,20 +123,29 @@ jobs:
             if [[ $(cat ~/test_status.txt) == "rollback" ]]; then
               echo "Tests failed. Performing rollback..."
               
-              aws s3 cp s3://${S3_BUCKET_NAME}/Flask-calculator.zip ./stable-build.zip
+              if aws s3 cp s3://${S3_BUCKET_NAME}/Flask-calculator.zip ./stable-build.zip; then
+                echo "Successfully downloaded stable build from S3"
+              else
+                echo "Failed to download stable build from S3"
+                exit 1
+              fi
               
               az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
               az account set --subscription $AZURE_SUBSCRIPTION_ID
-              az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src stable-build.zip
-              
-              echo "Rollback completed."
+              if az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src stable-build.zip; then
+                echo "Rollback completed successfully."
+              else
+                echo "Rollback failed."
+                exit 1
+              fi
             else
               echo "Tests passed. Skipping rollback process."
             fi
+          no_output_timeout: 20m
       - ms-teams/report:
-          only_on_fail: true
+          only_on_fail: false
           webhook_url: $TEAMS_WEBHOOK_URL
-          message: "Rollback step failed"
+          message: "Rollback step completed. Status: ${CIRCLE_JOB}"
 
 workflows:
   build_and_test_deploy:

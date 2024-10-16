@@ -9,7 +9,7 @@ orbs:
   browser-tools: circleci/browser-tools@1.4.8
   jira: circleci/jira@2.1.0
   compass: atlassian-labs/compass@0.1.3
-  ms-teams-orb: opub/ms-teams-orb@1.0.3
+  ms-teams: opub/ms-teams-orb@1.0.3
 
 jobs:
   builds:

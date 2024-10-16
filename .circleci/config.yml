@@ -30,12 +30,11 @@ jobs:
             ./build.sh
           no_output_timeout: 15m
       - run:
-          name: Artifact Archiving
+          name: Create Artifact
           command: |
-            chmod 777 artifact.sh
-            ./artifact.sh
+            zip -r Flask-calculator.zip .
       - store_artifacts:
-          path: ~/Flask-calculator/Flask-calculator.zip
+          path: Flask-calculator.zip
           destination: Flask-calculator.zip
       - ms-teams/report:
           only_on_fail: false
@@ -48,15 +47,26 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Debug Information
+          command: |
+            echo "Current directory: $(pwd)"
+            echo "Directory contents:"
+            ls -la
+      - run:
+          name: Create Artifact
+          command: |
+            zip -r Flask-calculator.zip .
+      - run:
+          name: Install Azure CLI
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y azure-cli
+      - run:
           name: Azure App Service Deploy
           command: |
-            chmod 777 artifact.sh
-            ./artifact.sh
-            curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
             az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
             az account set --subscription $AZURE_SUBSCRIPTION_ID
-            az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
-            az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME
+            az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src Flask-calculator.zip
           no_output_timeout: 20m
       - ms-teams/report:
           only_on_fail: false
@@ -85,13 +95,13 @@ jobs:
             
             pytest --junitxml=test-results/pytest/junit.xml tests/ || echo "Unit tests failed"
             
-            cd /home/circleci/Flask-calculator/tests
+            cd tests
             python selenium_driver_code.py || echo "Selenium tests failed"
             
-            if [ ! -f test-results/selenium/selenium_results.xml ]; then
+            if [ ! -f ../test-results/selenium/selenium_results.xml ]; then
               echo "Selenium results file not found. This may indicate a problem with the test execution."
               echo "rollback" > ~/test_status.txt
-            elif grep -q "failures=\"[1-9][0-9]*\"" test-results/selenium/selenium_results.xml || grep -q "failures=\"[1-9][0-9]*\"" test-results/pytest/junit.xml; then
+            elif grep -q "failures=\"[1-9][0-9]*\"" ../test-results/selenium/selenium_results.xml || grep -q "failures=\"[1-9][0-9]*\"" ../test-results/pytest/junit.xml; then
               echo "Tests failed. Marking for rollback."
               echo "rollback" > ~/test_status.txt
             else

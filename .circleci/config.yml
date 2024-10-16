@@ -203,10 +203,10 @@ jobs:
           pipeline_number: <<pipeline.number>>
       - compass/notify_deployment:
           environment_type: production
-      - run: Report to teams
-      - ms-teams-orb/report:
-          only_on_fail: false
+      - ms-teams/report:
+          only_on_fail: true
           webhook_url: $TEAMS_WEBHOOK_URL
+          message: "Rollback step failed"
 
 
 workflows:

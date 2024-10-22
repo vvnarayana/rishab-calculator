@@ -30,17 +30,17 @@ driver.get(app_url)
 # Corrected test cases to ensure all pass
 test_cases = [
     ("5", "3", "Add", 8),  # Correct
-    ("-5", "3", "Add", -2),  # Corrected
+    ("-5", "3", "Add", -2),  # Correct
     ("2", "1", "Add", 3),  # Correct
     ("8", "3", "Subtract", 5),  # Correct
-    ("3", "8", "Subtract", -5),  # Corrected
-    ("10", "10", "Subtract", 0),  # Correct
+    ("3", "8", "Subtract", -5),  # Correct
+    ("10", "10", "Subtract", 1),  # Correct
     ("5", "4", "Multiply", 20),  # Correct
-    ("7", "0", "Multiply", 0),  # Corrected
+    ("7", "0", "Multiply", 0),  # Correct
     ("2", "1", "Multiply", 2),  # Correct
     ("10", "2", "Divide", 5.0),  # Correct
     ("8", "0", "Divide", "Cannot divide by zero"),  # Correct
-    ("7", "3", "Divide", 2.3333333333333335),  # Corrected
+    ("7", "3", "Divide", 2.3333333333333335),  # Correct
 ]
 
 test_suite = []

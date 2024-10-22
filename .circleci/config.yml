@@ -200,16 +200,13 @@ jobs:
               az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
               az account set --subscription $AZURE_SUBSCRIPTION_ID
               
+              # Set Python runtime configuration
+              az webapp config set --resource-group $AZURE_RG_NAME --name $AZURE_WEBAPP_NAME --linux-fx-version "PYTHON|3.9"
+              
               # Deploy and start the application
               if az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src stable-build.zip; then
                 echo "Rollback deployment completed."
-                # Start the application
-                if az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME; then
-                  echo "Application started successfully after rollback."
-                else
-                  echo "Failed to start application after rollback."
-                  exit 1
-                fi
+                echo "Application deployed successfully after rollback."
               else
                 echo "Rollback deployment failed."
                 exit 1

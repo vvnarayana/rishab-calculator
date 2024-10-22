@@ -57,7 +57,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Environment
+          name: Azure Environment Setup
           command: |
             cat /etc/os-release
             sudo mkdir -p /var/lib/apt/lists/partial
@@ -171,6 +171,14 @@ jobs:
       - attach_workspace:
           at: ~/
       - aws-cli/setup
+      - run:
+          name: Azure Environment Setup
+          command: |
+            cat /etc/os-release
+            sudo mkdir -p /var/lib/apt/lists/partial
+            sudo chmod 755 /var/lib/apt/lists/partial
+            sudo rm /etc/apt/sources.list.d/kubernetes.list
+            sudo apt-get update
       - run:
           name: Check Test Status and Rollback if Necessary
           command: |

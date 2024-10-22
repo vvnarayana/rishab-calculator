@@ -187,7 +187,7 @@ jobs:
               fi
 
               # Deploy stable build to Azure
-              aaz login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+              az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
               az account set --subscription $AZURE_SUBSCRIPTION_ID
               if az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src stable-build.zip; then
                 echo "Rollback completed successfully."

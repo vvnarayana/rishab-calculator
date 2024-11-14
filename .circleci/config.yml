@@ -203,7 +203,6 @@ jobs:
               
               # Move files from nested directory to root
               mv home/circleci/Flask-calculator/* .
-              rm -rf home
               
               # Create new zip file with correct structure
               zip -r ../stable-build.zip ./*

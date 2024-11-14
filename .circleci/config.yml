@@ -270,15 +270,18 @@ workflows:
       - builds:
           context: 
             - Jira
-            - compass-integration-venkatap
+            - compass-integration-demotrundl
             - aws-credentials
             - teams
+          post-steps:
+            - compass/notify_deployment:
+                environment_type: production
       - deploy:
           requires:
             - builds
           context: 
             - Jira
-            - compass-integration-venkatap
+            - compass-integration-demotrundl
             - aws-credentials
             - teams
           post-steps:
@@ -289,7 +292,7 @@ workflows:
             - deploy
           context: 
             - Jira
-            - compass-integration-venkatap
+            - compass-integration-demotrundl
             - aws-credentials
             - teams
       - rollback:
@@ -297,6 +300,6 @@ workflows:
             - run_tests
           context: 
             - Jira
-            - compass-integration-venkatap
+            - compass-integration-demotrundl
             - aws-credentials
             - teams

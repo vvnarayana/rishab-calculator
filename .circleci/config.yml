@@ -156,70 +156,83 @@ jobs:
          message: "Test step completed. Status: ${CIRCLE_JOB}"
 
  rollback:
-   working_directory: ~/Flask-calculator
-   docker:
-     - image: cimg/azure:2023.09
-   steps:
-     - attach_workspace:
-          at: ~/
-     - checkout
-     - aws-cli/setup
-     - run:
-         name: Azure Environment Setup
-         command: |
-           cat /etc/os-release
-           sudo mkdir -p /var/lib/apt/lists/partial
-           sudo chmod 755 /var/lib/apt/lists/partial
-           sudo rm /etc/apt/sources.list.d/kubernetes.list
-           sudo apt-get update
-           # Install unzip
-           sudo apt-get install -y unzip
-     - run:
+    working_directory: ~/Flask-calculator
+    docker:
+      - image: cimg/azure:2023.09
+    steps:
+      - attach_workspace:
+          at: ~/workspace
+      - checkout
+      - aws-cli/setup
+      - run:
+          name: Azure Environment Setup
+          command: |
+            cat /etc/os-release
+            sudo mkdir -p /var/lib/apt/lists/partial
+            sudo chmod 755 /var/lib/apt/lists/partial
+            sudo rm /etc/apt/sources.list.d/kubernetes.list
+            sudo apt-get update
+            # Install unzip
+            sudo apt-get install -y unzip
+      - run:
           name: Check Test Status and Rollback if Necessary
           command: |
-            if [[ $(cat ~/test_status.txt) == "rollback" ]]; then
-              echo "Tests failed. Performing rollback..."
-             
-             # Download stable build from S3
-             aws s3 cp s3://${S3_BUCKET_NAME}/Flask-calculator.zip ./original-stable-build.zip \
-             || { echo "Failed to download stable build from S3"; exit 1; }
-             
-             # Install Azure CLI
-             curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-             
-             # Login to Azure
-             az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-             az account set --subscription $AZURE_SUBSCRIPTION_ID
-             
-             # Configure Python runtime and startup command
-             az webapp deployment source config-zip \
-               -g $AZURE_RG_NAME \
-               -n $AZURE_WEBAPP_NAME \
-               --src ./original-stable-build.zip
-             
-             # Wait for configuration to apply
-             sleep 30
-             
-             # Restart the webapp to ensure changes take effect
-             az webapp restart \
-               --resource-group $AZURE_RG_NAME \
-               --name $AZURE_WEBAPP_NAME
-             
-             echo "Rollback deployment completed successfully."
-             exit 1  # Explicitly fail the job to indicate a rollback
-           else
-             echo "Tests passed. Skipping rollback process."
-           fi
-     - jira/notify:
-         pipeline_id: <<pipeline.id>>
-         pipeline_number: <<pipeline.number>>
-     - compass/notify_deployment:
-         environment_type: production
-     - ms-teams/report:
-         only_on_fail: true
-         webhook_url: $TEAMS_WEBHOOK_URL
-         message: "Rollback step occurred"
+            # Ensure the file exists and is readable
+            if [ ! -f ~/workspace/test_status.txt ]; then
+              echo "Test status file not found. Treating as a failure."
+              TEST_STATUS="rollback"
+            else
+              TEST_STATUS=$(cat ~/workspace/test_status.txt)
+            fi
 
+            # Debug: Print the test status
+            echo "Test Status: $TEST_STATUS"
+
+            # Explicit check for rollback condition
+            if [[ "$TEST_STATUS" == "rollback" ]]; then
+              echo "Tests failed. Performing rollback..."
+              
+              # Download stable build from S3
+              aws s3 cp s3://${S3_BUCKET_NAME}/Flask-calculator.zip ./original-stable-build.zip \
+              || { echo "Failed to download stable build from S3"; exit 1; }
+              
+              # Install Azure CLI
+              curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+              
+              # Login to Azure
+              az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+              az account set --subscription $AZURE_SUBSCRIPTION_ID
+              
+              # Configure Python runtime and startup command
+              az webapp deployment source config-zip \
+                -g $AZURE_RG_NAME \
+                -n $AZURE_WEBAPP_NAME \
+                --src ./original-stable-build.zip
+              
+              # Wait for configuration to apply
+              sleep 30
+              
+              # Restart the webapp to ensure changes take effect
+              az webapp restart \
+                --resource-group $AZURE_RG_NAME \
+                --name $AZURE_WEBAPP_NAME
+              
+              echo "Rollback deployment completed successfully."
+              exit 1  # Explicitly fail the job to indicate a rollback
+            else
+              echo "Tests passed. No rollback needed."
+              exit 0
+            fi
+      - jira/notify:
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
+      - compass/notify_deployment:
+          environment_type: production
+      - ms-teams/report:
+          only_on_fail: true
+          webhook_url: $TEAMS_WEBHOOK_URL
+          message: "Rollback step occurred"
+          
 workflows:
  build_and_test_deploy:
    jobs:

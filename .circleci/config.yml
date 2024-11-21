@@ -1,3 +1,5 @@
+# CircleCI Configuration for Flask Calculator Project
+
 version: 2.1
 executors:
   python-executor:
@@ -168,8 +170,7 @@ jobs:
     docker:
       - image: cimg/azure:2023.09
     steps:
-      - attach_workspace:
-          at: ~/
+      - checkout
       - aws-cli/setup
       - run:
           name: Azure Environment Setup
@@ -194,47 +195,21 @@ jobs:
                 echo "Failed to download stable build from S3"
                 exit 1
               fi
-
-              # Create temp directory and restructure the zip contents
-              echo "Restructuring zip file for Azure deployment..."
-              mkdir -p temp_deploy
-              cd temp_deploy
-              unzip ../original-stable-build.zip
               
-              # Move files from nested directory to root
-              mv home/circleci/Flask-calculator/* .
-              
-              # Create new zip file with correct structure
-              zip -r ../stable-build.zip ./*
-              cd ..
-              
-              # Show contents of restructured zip
-              echo "Contents of restructured zip file:"
-              unzip -l stable-build.zip
-              
-              # Install Azure CLI
               curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
               # Login to Azure
               az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
               az account set --subscription $AZURE_SUBSCRIPTION_ID
               
               # Configure Python runtime and startup command
-              az webapp config set \
-                --resource-group $AZURE_RG_NAME \
-                --name $AZURE_WEBAPP_NAME \
-                --linux-fx-version "PYTHON|3.9" \
-                --startup-file "python app.py"
+              az webapp deployment source config-zip -g $AZURE_RG_NAME -n $AZURE_WEBAPP_NAME --src *.zip
+
               
               # Wait for configuration to apply
               sleep 30
               
               # Deploy using the new recommended command
-              if az webapp deploy \
-                --resource-group $AZURE_RG_NAME \
-                --name $AZURE_WEBAPP_NAME \
-                --src-path stable-build.zip \
-                --type zip; then
+              if az webapp up -n $AZURE_WEBAPP_NAME -g $AZURE_RG_NAME; then
                 echo "Rollback deployment completed successfully."
               else
                 echo "Rollback deployment failed."

@@ -161,7 +161,7 @@ jobs:
      - image: cimg/azure:2023.09
    steps:
      - attach_workspace:
-         at: ~/workspace
+          at: ~/
      - checkout
      - aws-cli/setup
      - run:
@@ -175,11 +175,10 @@ jobs:
            # Install unzip
            sudo apt-get install -y unzip
      - run:
-         name: Check Test Status and Rollback if Necessary
-         command: |
-           TEST_STATUS=$(cat ~/workspace/test_status.txt || echo "pass")
-           if [[ "$TEST_STATUS" == "rollback" ]]; then
-             echo "Tests failed. Performing rollback..."
+          name: Check Test Status and Rollback if Necessary
+          command: |
+            if [[ $(cat ~/test_status.txt) == "rollback" ]]; then
+              echo "Tests failed. Performing rollback..."
              
              # Download stable build from S3
              aws s3 cp s3://${S3_BUCKET_NAME}/Flask-calculator.zip ./original-stable-build.zip \

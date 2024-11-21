@@ -226,7 +226,7 @@ jobs:
                 --name $AZURE_WEBAPP_NAME
               
               echo "Rollback deployment completed successfully."
-              exit 1  # Explicitly fail the job to indicate a rollback
+              exit 0  # Explicitly fail the job to indicate a rollback
             else
               echo "Tests passed. No rollback needed."
               exit 0

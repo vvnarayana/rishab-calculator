@@ -167,7 +167,7 @@ jobs:
      - run:
          name: Azure Environment Setup
          command: |
-           cat /etc.os-release
+           cat /etc/os-release
            sudo mkdir -p /var/lib/apt/lists/partial
            sudo chmod 755 /var/lib/apt/lists/partial
            sudo rm /etc/apt/sources.list.d/kubernetes.list

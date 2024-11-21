@@ -92,68 +92,76 @@ jobs:
          message: "Deploy step completed. Status: ${CIRCLE_JOB}"
 
  run_tests:
-   working_directory: ~/Flask-calculator
-   docker:
-     - image: "cimg/python:3.9.9-browsers"
-   steps:
-     - checkout
-     - python/install-packages:
-         pkg-manager: pip
-     - aws-cli/setup
-     - browser-tools/install-chrome
-     - browser-tools/install-chromedriver
-     - run:
-         command: |
-           google-chrome --version
-           chromedriver --version
-         name: Check install
-     - run:
-         name: List directory contents
-         command: |
-           pwd
-           ls -la
-     - run:
-         name: Run Unit Tests and Selenium Tests
-         command: |
-           python -m venv venv
-           . venv/bin/activate
-           pip install --upgrade pip
-           pip install -r requirements.txt
-           mkdir -p test-results/pytest
-           mkdir -p test-results/selenium
-           # Run pytest unit tests
-           pytest --junitxml=test-results/pytest/junit.xml tests/
-           
-           # Run Selenium tests
-           pwd
-           ls -la
-           cd /home/circleci/Flask-calculator/tests
-           python selenium_driver_code.py
-           
-           # Check if Selenium test failed
-           if [ $? -ne 0 ] || grep -q "Test failed" test-results/selenium/selenium_results.xml; then
-             echo "Selenium tests failed"
-             mkdir -p ~/workspace
-             echo "rollback" > ~/workspace/test_status.txt
-             exit 1
-           else
-             echo "Tests passed successfully"
-             mkdir -p ~/workspace
-             echo "pass" > ~/workspace/test_status.txt
-           fi
-     - store_test_results:
-         path: test-results
-     - persist_to_workspace:
-         root: ~/workspace
-         paths:
-           - test_status.txt
-     - jira/notify:
-         pipeline_id: <<pipeline.id>>
-         pipeline_number: <<pipeline.number>>
-     - ms-teams/report:
-         only_on_fail: false
-         webhook_url: $TEAMS_WEBHOOK_URL
-         message: "Test step completed. Status: ${CIRCLE_JOB}"
+    working_directory: ~/Flask-calculator
+    docker:
+      - image: "cimg/python:3.9.9-browsers"
+    steps: 
+      - checkout 
+      - python/install-packages: 
+          pkg-manager: pip
+      - aws-cli/setup
+      - browser-tools/install-chrome
+      - browser-tools/install-chromedriver
+      - run:
+          command: |
+            google-chrome --version
+            chromedriver --version
+          name: Check install
+      - run:
+          name: List directory contents
+          command: |
+            pwd
+            ls -la
+      - run:
+          name: Run Unit Tests and Selenium Tests
+          command: |
+            python -m venv venv
+            . venv/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt
+            mkdir -p test-results/pytest
+            mkdir -p test-results/selenium
+            
+            # Run pytest unit tests
+            pytest --junitxml=test-results/pytest/junit.xml tests/
+            
+            # Run Selenium tests
+            pwd
+            ls -la
+            cd /home/circleci/Flask-calculator/tests
+            python selenium_driver_code.py
+            
+            # Verify Selenium results file was created
+            if [ ! -f test-results/selenium/selenium_results.xml ]; then
+              echo "Selenium results file not found. This may indicate a problem with the test execution."
+              echo "rollback" > ~/test_status.txt
+              exit 1
+            fi
+            
+            # Check if either test suite failed
+            if [ $? -ne 0 ] || grep -q "failures=\"[1-9][0-9]*\"" test-results/selenium/selenium_results.xml; then
+              echo "Tests failing, executing rollback."
+              echo "rollback" > ~/test_status.txt
+            else
+              echo "Tests are successful, no rollback required."
+              echo "pass" > ~/test_status.txt
+            fi
+            
+            # Continue with the rest of the pipeline
+            echo "Continuing with the pipeline execution..."
+      - store_test_results:
+          path: test-results
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - test_status.txt
+      - jira/notify:
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
+      - ms-teams/report:
+          only_on_fail: false
+          webhook_url: $TEAMS_WEBHOOK_URL
+          message: "Test step completed. Status: ${CIRCLE_JOB}"
 
  rollback:
     working_directory: ~/Flask-calculator

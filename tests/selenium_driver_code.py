@@ -34,7 +34,7 @@ test_cases = [
     ("2", "1", "Add", 3),  # Correct
     ("8", "3", "Subtract", 5),  # Correct
     ("3", "8", "Subtract", -5),  # Correct
-    ("10", "10", "Subtract", 0),  # Fixed: Expected 0, not 1
+    ("10", "10", "Subtract", 1),  # incorrect
     ("5", "4", "Multiply", 20),  # Correct
     ("7", "0", "Multiply", 0),  # Correct
     ("2", "1", "Multiply", 2),  # Correct

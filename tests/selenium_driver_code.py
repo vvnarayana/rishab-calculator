@@ -34,7 +34,7 @@ test_cases = [
     ("2", "1", "Add", 3),  # Correct
     ("8", "3", "Subtract", 5),  # Correct
     ("3", "8", "Subtract", -5),  # Correct
-    ("10", "10", "Subtract", 1),  # incorrect
+    ("10", "10", "Subtract", 0),  # Corrected expected result
     ("5", "4", "Multiply", 20),  # Correct
     ("7", "0", "Multiply", 0),  # Correct
     ("2", "1", "Multiply", 2),  # Correct
@@ -75,28 +75,44 @@ try:
         test_case_name = f"{test_case[0]} {test_case[2]} {test_case[1]}"
         test = TestCase(test_case_name, classname="CalculatorTests")
 
+        # Detailed failure reporting
+        def report_detailed_failure(expected, actual):
+            print(f"Test Failed Details:")
+            print(f"Test Case: {test_case_name}")
+            print(f"Expected: {expected}")
+            print(f"Actual  : {actual}")
+            test.add_failure_info(f"Expected: {expected}, Actual: {actual}")
+
         # Handling the floating-point comparison separately
         if isinstance(test_case[3], float) or isinstance(test_case[3], int):
             if actual_result_numeric == "Cannot divide by zero":
                 expected_result = actual_result_numeric
             else:
-                expected_result = float(actual_result_numeric)
+                try:
+                    expected_result = float(actual_result_numeric)
+                except ValueError:
+                    report_detailed_failure(test_case[3], actual_result_numeric)
+                    test_suite.append(test)
+                    total_tests += 1
+                    continue
 
             tolerance = 0.01  # Adjust tolerance for rounding
-            if math.isclose(expected_result, float(test_case[3]), rel_tol=tolerance):
-                test_suite.append(test)
-                passed_tests += 1
-            else:
-                print(f"Test failed: {test_case_name}, Expected: {float(test_case[3])}, Actual: {expected_result}")
-                test.add_failure_info(f"Expected: {float(test_case[3])}, Actual: {expected_result}")
+            try:
+                if math.isclose(float(actual_result_numeric), float(test_case[3]), rel_tol=tolerance):
+                    test_suite.append(test)
+                    passed_tests += 1
+                else:
+                    report_detailed_failure(test_case[3], actual_result_numeric)
+                    test_suite.append(test)
+            except ValueError as e:
+                report_detailed_failure(test_case[3], actual_result_numeric)
                 test_suite.append(test)
         else:
-            if actual_result_numeric == test_case[3] or actual_result_numeric == "Cannot divide by zero":
+            if actual_result_numeric == str(test_case[3]) or actual_result_numeric == "Cannot divide by zero":
                 test_suite.append(test)
                 passed_tests += 1
             else:
-                print(f"Test failed: {test_case_name}, Expected: {test_case[3]}, Actual: {actual_result_numeric}")
-                test.add_failure_info(f"Expected: {test_case[3]}, Actual: {actual_result_numeric}")
+                report_detailed_failure(test_case[3], actual_result_numeric)
                 test_suite.append(test)
 
         total_tests += 1

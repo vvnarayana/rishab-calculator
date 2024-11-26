@@ -33,6 +33,19 @@ jobs:
          name: Python Version
          command: python3 --version
      - run:
+         name: Run Pytest Unit Tests
+         command: |
+           python -m venv venv
+           . venv/bin/activate
+           pip install --upgrade pip
+           pip install -r requirements.txt
+           mkdir -p test-results/pytest
+           
+           # Run pytest unit tests
+           pytest --junitxml=test-results/pytest/junit.xml tests/
+     - store_test_results:
+         path: test-results
+     - run:
          name: Artifact Archiving
          command: |
            pwd
@@ -113,21 +126,15 @@ jobs:
             pwd
             ls -la
       - run:
-          name: Run Unit Tests and Selenium Tests
+          name: Run Selenium Tests
           command: |
             python -m venv venv
             . venv/bin/activate
             pip install --upgrade pip
             pip install -r requirements.txt
-            mkdir -p test-results/pytest
             mkdir -p test-results/selenium
             
-            # Run pytest unit tests
-            pytest --junitxml=test-results/pytest/junit.xml tests/
-            
             # Run Selenium tests
-            pwd
-            ls -la
             cd /home/circleci/Flask-calculator/tests
             python selenium_driver_code.py
             
@@ -138,7 +145,7 @@ jobs:
               exit 1
             fi
             
-            # Check if either test suite failed
+            # Check if Selenium tests failed
             if [ $? -ne 0 ] || grep -q "failures=\"[1-9][0-9]*\"" test-results/selenium/selenium_results.xml; then
               echo "Tests failing, executing rollback."
               echo "rollback" > ~/test_status.txt
@@ -146,9 +153,6 @@ jobs:
               echo "Tests are successful, no rollback required."
               echo "pass" > ~/test_status.txt
             fi
-            
-            # Continue with the rest of the pipeline
-            echo "Continuing with the pipeline execution..."
       - store_test_results:
           path: test-results
       - persist_to_workspace:
